@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
 class Championship extends BaseModel
 {
     protected $fillable = [
@@ -11,13 +14,18 @@ class Championship extends BaseModel
         'playoffs'
     ];
 
-    public function players(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function players(): HasMany
     {
         return $this->hasMany(Player::class);
     }
 
-    public function teams(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function teams(): HasMany
     {
         return $this->hasMany(Team::class);
+    }
+
+    public function fixture(): HasMany
+    {
+        return $this->hasMany(Fixture::class);
     }
 }

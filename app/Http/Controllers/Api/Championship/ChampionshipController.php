@@ -38,12 +38,34 @@ class ChampionshipController extends Controller
         }
     }
 
-    public function find(int $id): JsonResponse
+    public function show(int $id): JsonResponse
     {
         try {
             $championship = $this->service->find($id);
 
             return $this->responseOk($championship);
+        } catch (Exception $e) {
+            return $this->responseUnprocessableEntity($e->getMessage());
+        }
+    }
+
+    public function showFixture(int $id): JsonResponse
+    {
+        try {
+            $championship = $this->service->findFixture($id);
+
+            return $this->responseOk($championship);
+        } catch (Exception $e) {
+            return $this->responseUnprocessableEntity($e->getMessage());
+        }
+    }
+
+    public function getFixtures(int $id): JsonResponse
+    {
+        try {
+            $fixtures = $this->service->getFixtures($id);
+
+            return $this->responseOk($fixtures);
         } catch (Exception $e) {
             return $this->responseUnprocessableEntity($e->getMessage());
         }

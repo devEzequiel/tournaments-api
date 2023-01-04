@@ -38,7 +38,7 @@ class TeamController extends Controller
         }
     }
 
-    public function find(int $id): JsonResponse
+    public function show(int $id): JsonResponse
     {
         try {
             $team = $this->service->find($id);

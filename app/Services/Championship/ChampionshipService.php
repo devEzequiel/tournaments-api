@@ -14,9 +14,14 @@ class ChampionshipService extends BaseService implements ChampionshipContract
         parent::__construct(new Championship());
     }
 
+    /**
+     * @throws Exception
+     */
     public function create($data): bool
     {
-        return (bool)$this->model::create($data);
+        $champ = $this->model::create($data);
+        self::createFixtures($data['teams'], $champ->id);
+        return true;
     }
 
     /**
@@ -35,7 +40,7 @@ class ChampionshipService extends BaseService implements ChampionshipContract
             ]);
 
         if (!$championship) {
-            throw new Exception('Jogador não encontrado');
+            throw new Exception('Campeonato não encontrado');
         }
 
         return $championship;
@@ -51,11 +56,10 @@ class ChampionshipService extends BaseService implements ChampionshipContract
             ->get()->map(fn($championship) => [
                 'id' => $championship->id,
                 'name' => $championship->name,
-                'team_name' => $championship->team->name ?? null,
-//                    'team_name' => $championship->team->name,
+                'team_name' => $championship->team->name ?? null
             ]);
 
-        if (!$championship) throw new Exception('Nenhum jogador encontrado');
+        if (!$championship) throw new Exception('Nenhum campeonato encontrado');
 
         return $championship;
     }
@@ -67,7 +71,7 @@ class ChampionshipService extends BaseService implements ChampionshipContract
     {
         $championship = $this->model::find((int)$id);
 
-        if (!$championship) throw new Exception('Jogador não encontrado');
+        if (!$championship) throw new Exception('Campeonato não encontrado');
 
         return (bool)$championship->update($data);
     }
@@ -79,8 +83,58 @@ class ChampionshipService extends BaseService implements ChampionshipContract
     {
         $championship = $this->model::find($id);
 
-        if (!$championship) throw new Exception('Jogador não encontrado');
+        if (!$championship) throw new Exception('Campeonato não encontrado');
 
         return (bool)$championship->delete();
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function getFixtures(int $id)
+    {
+        $fixtures = $this->model::query()
+            ->where('championship_id', $id)
+            ->with('awayTeam', 'homeTeam')
+            ->get()->map(fn($fixture) => [
+                'id' => $fixture->id,
+                'name' => $fixture->name,
+                'away_team' => $fixture->awayTeam->name ?? null,
+                'home_team' => $fixture->homeTeam->name ?? null
+            ]);
+
+        if (!$fixtures) throw new Exception('Nenhum confronto encontrado');
+
+        return $fixtures;
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function findFixture(int $fixture_id)
+    {
+        $fixtures = $this->model::query()
+            ->where('id', $fixture_id)
+            ->with('awayTeam', 'homeTeam')
+            ->get()->map(fn($fixture) => [
+                'id' => $fixture->id,
+                'name' => $fixture->name,
+                'away_team' => $fixture->awayTeam->name ?? null,
+                'home_team' => $fixture->homeTeam->name ?? null
+            ]);
+
+        if (!$fixtures) {
+            throw new Exception('Confronto não encontrado');
+        }
+
+        return $fixtures;
+    }
+
+    private static function createFixtures(array $teams, int $champ_id)
+    {
+//        pesquisar um algoritmo pra array x array
+//        foreach ($teams as ) {
+//
+//        }
     }
 }

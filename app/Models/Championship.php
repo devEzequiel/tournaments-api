@@ -24,7 +24,7 @@ class Championship extends BaseModel
         return $this->hasMany(Team::class);
     }
 
-    public function fixture(): HasMany
+    public function fixtures(): HasMany
     {
         return $this->hasMany(Fixture::class);
     }

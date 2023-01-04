@@ -39,7 +39,7 @@ class PlayerController extends Controller
         }
     }
 
-    public function find(int $id): JsonResponse
+    public function show(int $id): JsonResponse
     {
         try {
             $player = $this->service->find($id);

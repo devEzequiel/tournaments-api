@@ -12,18 +12,17 @@ class Fixture extends BaseModel
         'home_team_id',
         'away_team_id',
         'round_number',
-        'game_number',
-        'was_played'
+        'game_number'
     ];
 
-    public function homeTeam(): HasOne
+    public function homeTeam(): BelongsTo
     {
-        return $this->hasOne(Team::class, 'home_team_id', 'id');
+        return $this->belongsTo(Team::class, 'home_team_id', 'id');
     }
 
-    public function awayTeam(): HasOne
+    public function awayTeam(): BelongsTo
     {
-        return $this->hasOne(Team::class, 'away_team_id', 'id');
+        return $this->belongsTo(Team::class, 'away_team_id', 'id');
     }
 
     public function championship(): BelongsTo

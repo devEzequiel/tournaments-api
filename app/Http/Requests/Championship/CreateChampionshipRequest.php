@@ -28,6 +28,7 @@ class CreateChampionshipRequest extends FormRequest
             'description' => ['string', 'nullable'],
             'rounds' => ['numeric', 'required'],
             'playoffs' => ['boolean', 'required'],
+            'teams' => ['array', 'required']
         ];
     }
 }

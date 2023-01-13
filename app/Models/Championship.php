@@ -19,11 +19,6 @@ class Championship extends BaseModel
         return $this->hasMany(Player::class);
     }
 
-    public function teams(): HasMany
-    {
-        return $this->hasMany(Team::class);
-    }
-
     public function fixtures(): HasMany
     {
         return $this->hasMany(Fixture::class);

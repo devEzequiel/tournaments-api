@@ -57,7 +57,7 @@ class TeamService extends BaseService implements TeamContract
 
         if (!$team) throw new Exception('Nenhum time encontrado');
 
-        return $team;
+        return (array)$team;
     }
 
     /**

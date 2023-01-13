@@ -21,7 +21,6 @@ return new class extends Migration
 
             $table->integer('round_number');
             $table->integer('game_number');
-            $table->boolean('was_played');
             $table->timestamps();
 
             $table->foreign('home_team_id')->references('id')->on('teams');

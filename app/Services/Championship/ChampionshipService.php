@@ -4,6 +4,7 @@ namespace App\Services\Championship;
 
 use App\Contracts\ChampionshipContract;
 use App\Models\Championship;
+use App\Models\Fixture;
 use App\Services\BaseService;
 use Exception;
 
@@ -31,12 +32,9 @@ class ChampionshipService extends BaseService implements ChampionshipContract
     {
         $championship = $this->model::query()
             ->where('id', $id)
-            ->with('teams', 'players')
             ->get()->map(fn($championship) => [
                 'id' => $championship->id,
-                'name' => $championship->name,
-                'team_name' => $championship->teams->pluck('name') ?? null,
-                'player_name' => $championship->players->pluck('name') ?? null,
+                'name' => $championship->name
             ]);
 
         if (!$championship) {
@@ -93,15 +91,18 @@ class ChampionshipService extends BaseService implements ChampionshipContract
      */
     public function getFixtures(int $id)
     {
-        $fixtures = $this->model::query()
+        $fixtures = Fixture::query()
             ->where('championship_id', $id)
+            ->orderBy('round_number', 'ASC')
+            ->orderBy('game_number', 'ASC')
             ->with('awayTeam', 'homeTeam')
             ->get()->map(fn($fixture) => [
                 'id' => $fixture->id,
-                'name' => $fixture->name,
+                'round' => $fixture->round_number,
+                'game' => $fixture->game_number,
                 'away_team' => $fixture->awayTeam->name ?? null,
                 'home_team' => $fixture->homeTeam->name ?? null
-            ]);
+            ])->toArray();
 
         if (!$fixtures) throw new Exception('Nenhum confronto encontrado');
 
@@ -132,9 +133,25 @@ class ChampionshipService extends BaseService implements ChampionshipContract
 
     private static function createFixtures(array $teams, int $champ_id)
     {
-//        pesquisar um algoritmo pra array x array
-//        foreach ($teams as ) {
-//
-//        }
+        $scheduleBuilder = new \ScheduleBuilder();
+        $scheduleBuilder->setTeams($teams);
+        $scheduleBuilder->setRounds(10);
+        $scheduleBuilder->shuffle(14);
+        $schedule = $scheduleBuilder->build();
+
+        foreach ($schedule as $round => $teams) {
+            $data = [];
+            $data['championship_id'] = $champ_id;
+            $data['round_number'] = $round;
+            foreach ($teams as $game => $team) {
+                $data['game_number'] = $game;
+                $data['home_team_id'] = $team[0];
+                $data['away_team_id'] = $team[1];
+            }
+
+            Fixture::create($data);
+        }
+
+        return;
     }
 }

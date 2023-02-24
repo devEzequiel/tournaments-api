@@ -147,9 +147,8 @@ class ChampionshipService extends BaseService implements ChampionshipContract
                 $data['game_number'] = $game;
                 $data['home_team_id'] = $team[0];
                 $data['away_team_id'] = $team[1];
+                Fixture::create($data);
             }
-
-            Fixture::create($data);
         }
 
         return;

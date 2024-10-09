@@ -2,12 +2,12 @@
 
 namespace App\Services;
 
-use App\Models\ModelBase;
+use App\Models\BaseModel;
 use Illuminate\Database\Eloquent\Model;
 
 class BaseService
 {
-    public function __construct(protected Model $model)
+    public function __construct(protected BaseModel $model)
     {
     }
 }

@@ -82,4 +82,22 @@ class PlayerService extends BaseService implements PlayerContract
 
         return (bool)$player->delete();
     }
+
+    public function getCurrentTeamStats(int $id)
+    {
+        $player = $this->model::query()
+            ->where('id', $id)
+            ->with('team')
+            ->get()->map(fn($player) => [
+                'id' => $player->id,
+                'name' => $player->name,
+                'team_name' => $player->team->name ?? null
+            ]);
+
+        if (!$player) {
+            throw new Exception('Jogador não encontrado');
+        }
+
+        return $player;
+    }
 }

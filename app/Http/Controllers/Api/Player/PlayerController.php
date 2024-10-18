@@ -50,6 +50,17 @@ class PlayerController extends Controller
         }
     }
 
+    public function getCurrentTeamStats(int $id)
+    {
+        try {
+            $player = $this->service->getCurrentTeamStats($id);
+
+            return $this->responseOk($player);
+        } catch (Exception $e) {
+            return $this->responseUnprocessableEntity($e->getMessage());
+        }
+    }
+
     public function update(UpdatePlayerRequest $request, int $id): JsonResponse
     {
         try {

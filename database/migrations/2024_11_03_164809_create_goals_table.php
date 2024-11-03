@@ -12,7 +12,7 @@ return new class extends Migration {
      */
     public function up()
     {
-        Schema::create('fixtures', function (Blueprint $table) {
+        Schema::create('goals', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('fixture_id');
             $table->unsignedBigInteger('scorer_id');

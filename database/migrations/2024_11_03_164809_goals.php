@@ -12,20 +12,17 @@ return new class extends Migration {
      */
     public function up()
     {
-        Schema::create('games', function (Blueprint $table) {
+        Schema::create('fixtures', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('home_team_id');
-            $table->unsignedBigInteger('away_team_id');
-            $table->unsignedBigInteger('championship_id');
             $table->unsignedBigInteger('fixture_id');
-            $table->integer('home_goals');
-            $table->integer('away_goals');
-            $table->timestamps();
+            $table->unsignedBigInteger('championship_id');
+            $table->unsignedBigInteger('scorer_id');
+            $table->unsignedBigInteger('assist_id');
 
-            $table->foreign('home_team_id')->references('id')->on('teams');
-            $table->foreign('away_team_id')->references('id')->on('teams');
             $table->foreign('championship_id')->references('id')->on('championships');
             $table->foreign('fixture_id')->references('id')->on('fixtures');
+            $table->foreign('scorer_id')->references('id')->on('players');
+            $table->foreign('assist_id')->references('id')->on('players');
         });
     }
 
@@ -36,6 +33,6 @@ return new class extends Migration {
      */
     public function down()
     {
-        Schema::dropIfExists('games');
+        //
     }
 };

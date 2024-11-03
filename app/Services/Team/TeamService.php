@@ -18,7 +18,7 @@ class TeamService extends BaseService implements TeamContract
 
     public function create($data): bool
     {
-        return (bool)$this->model::create($data);
+        return (bool) $this->model::create($data);
     }
 
     /**
@@ -33,7 +33,7 @@ class TeamService extends BaseService implements TeamContract
                 'id' => $team->id,
                 'name' => $team->name,
                 'players' => $team->players->pluck('name')
-            ]);
+            ])->toArray();
 
         if (!$team) {
             throw new Exception('Time não encontrado');
@@ -55,9 +55,10 @@ class TeamService extends BaseService implements TeamContract
                 'players' => $team->players->pluck('name') ?? null
             ]);
 
-        if (!$team) throw new Exception('Nenhum time encontrado');
+        if (!$team)
+            throw new Exception('Nenhum time encontrado');
 
-        return (array)$team;
+        return (array) $team;
     }
 
     /**
@@ -65,11 +66,12 @@ class TeamService extends BaseService implements TeamContract
      */
     public function update($data, $id): bool
     {
-        $team = $this->model::find((int)$id);
+        $team = $this->model::find((int) $id);
 
-        if (!$team) throw new Exception('Time não encontrado');
+        if (!$team)
+            throw new Exception('Time não encontrado');
 
-        return (bool)$team->update($data);
+        return (bool) $team->update($data);
     }
 
     /**
@@ -79,8 +81,9 @@ class TeamService extends BaseService implements TeamContract
     {
         $team = $this->model::find($id);
 
-        if (!$team) throw new Exception('Time não encontrado');
+        if (!$team)
+            throw new Exception('Time não encontrado');
 
-        return (bool)$team->delete();
+        return (bool) $team->delete();
     }
 }

@@ -19,7 +19,7 @@ class Controller extends BaseController
      * @param string $message
      * @return JsonResponse
      */
-    public function responseOk(array $data, string $message = 'success'): JsonResponse
+    public function responseOk($data, $message = 'success'): JsonResponse
     {
         return response()->json(['message' => $message, 'data' => $data], Response::HTTP_OK);
     }
@@ -28,7 +28,7 @@ class Controller extends BaseController
      * @param string $message
      * @return JsonResponse
      */
-    public function responseCreated(string $message = ''): JsonResponse
+    public function responseCreated($message = ''): JsonResponse
     {
         return response()->json($message ? ['message' => $message] : null, Response::HTTP_CREATED);
     }
@@ -37,7 +37,7 @@ class Controller extends BaseController
      * @param string $message
      * @return JsonResponse
      */
-    public function responseAccepted(string $message = 'success'): JsonResponse
+    public function responseAccepted($message = 'success'): JsonResponse
     {
         return response()->json(['message' => $message], ResponseAlias::HTTP_ACCEPTED);
     }

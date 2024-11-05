@@ -8,4 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class PreviousPlayerTeam extends Model
 {
     use HasFactory;
+
+    protected $table = 'previous_players_team';
+
+    protected $fillable = [
+        'player_id',
+        'team_id'
+    ];
 }

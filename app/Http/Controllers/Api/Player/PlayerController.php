@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Player;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Player\ChangePlayerTeamRequest;
 use App\Http\Requests\Player\CreatePlayerRequest;
 use App\Http\Requests\Player\UpdatePlayerRequest;
 use App\Services\Player\PlayerService;
@@ -69,6 +70,19 @@ class PlayerController extends Controller
             $this->service->update($data, $id);
 
             return $this->responseCreated('Jogador atualizado');
+        } catch (Exception $e) {
+            return $this->responseUnprocessableEntity($e->getMessage());
+        }
+    }
+
+    public function changeTeam(ChangePlayerTeamRequest $request): JsonResponse
+    {
+        try {
+            $data = $request->validated();
+
+            $this->service->changeTeam($data);
+
+            return $this->responseCreated('Time alterado');
         } catch (Exception $e) {
             return $this->responseUnprocessableEntity($e->getMessage());
         }

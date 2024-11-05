@@ -4,6 +4,7 @@ namespace App\Services\Player;
 
 use App\Contracts\PlayerContract;
 use App\Models\Player;
+use App\Models\PreviousPlayerTeam;
 use App\Services\BaseService;
 use Exception;
 
@@ -16,7 +17,7 @@ class PlayerService extends BaseService implements PlayerContract
 
     public function create($data): bool
     {
-        return (bool)$this->model::create($data);
+        return (bool) $this->model::create($data);
     }
 
     /**
@@ -51,10 +52,11 @@ class PlayerService extends BaseService implements PlayerContract
                 'id' => $player->id,
                 'name' => $player->name,
                 'team_name' => $player->team->name ?? null,
-//                    'team_name' => $player->team->name,
+                //                    'team_name' => $player->team->name,
             ]);
 
-        if (!$player) throw new Exception('Nenhum jogador encontrado');
+        if (!$player)
+            throw new Exception('Nenhum jogador encontrado');
 
         return $player;
     }
@@ -64,11 +66,28 @@ class PlayerService extends BaseService implements PlayerContract
      */
     public function update($data, $id): bool
     {
-        $player = $this->model::find((int)$data['id']);
+        $player = $this->model::find((int) $data['id']);
 
-        if (!$player) throw new Exception('Jogador não encontrado');
+        if (!$player)
+            throw new Exception('Jogador não encontrado');
 
-        return (bool)$player->update($data);
+        return (bool) $player->update($data);
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function changeTeam($data): bool
+    {
+        $player = $this->model::find((int) $data['player_id']);
+
+        if (!$player)
+            throw new Exception('Jogador não encontrado');
+
+        $previous_team = $player->team->id;
+        PreviousPlayerTeam::create(['player_id' => $player->id, 'team_id' => $previous_team]);
+
+        return (bool) $player->update($data);
     }
 
     /**
@@ -78,16 +97,17 @@ class PlayerService extends BaseService implements PlayerContract
     {
         $player = $this->model::find($id);
 
-        if (!$player) throw new Exception('Jogador não encontrado');
+        if (!$player)
+            throw new Exception('Jogador não encontrado');
 
-        return (bool)$player->delete();
+        return (bool) $player->delete();
     }
 
     public function getCurrentTeamStats(int $id)
     {
         $player = $this->model::query()
             ->where('id', $id)
-            ->with('team')
+            ->with('team', 'goals', 'awards')
             ->get()->map(fn($player) => [
                 'id' => $player->id,
                 'name' => $player->name,

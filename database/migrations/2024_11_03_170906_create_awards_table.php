@@ -14,6 +14,8 @@ return new class extends Migration {
     {
         Schema::create('awards', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('championship_id'); //
+
             $table->unsignedBigInteger('first_place'); //champion
             $table->unsignedBigInteger('second_place'); //vice
             $table->unsignedBigInteger('third_place'); //bronze
@@ -22,6 +24,8 @@ return new class extends Migration {
             $table->unsignedBigInteger('golden_boot'); //most goals
             $table->unsignedBigInteger('playmaker'); //most assists
             $table->unsignedBigInteger('golden_glove'); //fewer goals conceded
+
+            $table->foreign('championship_id')->references('id')->on('championships');
 
             $table->foreign('first_place_id')->references('id')->on('teams');
             $table->foreign('second_place_id')->references('id')->on('teams');

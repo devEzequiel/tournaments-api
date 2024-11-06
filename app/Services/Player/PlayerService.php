@@ -107,6 +107,13 @@ class PlayerService extends BaseService implements PlayerContract
     {
         $player = $this->model::query()
             ->where('id', $id)
+            ->whereHas('awards', function ($query) use ($id) {
+                $query->where('best_player', $id)
+                    ->orWhere('golden_boot', $id)
+                    ->orWhere('playmaker', $id)
+                    ->orWhere('golden_glove', $id)
+                ;
+            })
             ->with('team', 'goals', 'awards')
             ->get()->map(fn($player) => [
                 'id' => $player->id,

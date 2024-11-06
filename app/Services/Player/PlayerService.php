@@ -7,6 +7,7 @@ use App\Models\Player;
 use App\Models\PreviousPlayerTeam;
 use App\Services\BaseService;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class PlayerService extends BaseService implements PlayerContract
 {
@@ -46,14 +47,30 @@ class PlayerService extends BaseService implements PlayerContract
      */
     public function all()
     {
-        $player = $this->model::query()
-            ->with('team')
-            ->get()->map(fn($player) => [
-                'id' => $player->id,
-                'name' => $player->name,
-                'team_name' => $player->team->name ?? null,
-                //                    'team_name' => $player->team->name,
-            ]);
+        $player = DB::table('players')
+            ->leftJoin('goals as scored_goals', 'players.id', '=', 'scored_goals.scorer_id')
+            ->leftJoin('goals as assists', 'players.id', '=', 'assists.assist_id')
+            ->leftJoin('awards', function ($join) {
+                $join->on('players.id', '=', 'awards.golden_boot')
+                    ->orOn('players.id', '=', 'awards.best_player')
+                    ->orOn('players.id', '=', 'awards.playmaker')
+                    ->orOn('players.id', '=', 'awards.golden_glove');
+            })
+            ->select(
+                'players.id',
+                'players.name',
+                'players.',
+                DB::raw('COUNT(DISTINCT scored_goals.id) as total_goals'),
+                DB::raw('COUNT(DISTINCT assists.id) as total_assists'),
+                DB::raw('COUNT(DISTINCT awards.golden_boot) as golden_boot_awards'),
+                DB::raw('COUNT(DISTINCT awards.best_player) as best_player_awards'),
+                DB::raw('COUNT(DISTINCT awards.playmaker) as playmaker_awards'),
+                DB::raw('COUNT(DISTINCT awards.golden_glove) as golden_glove_awards')
+            )
+            ->groupBy('players.id')
+            // ->orderByDesc('total_goals')
+            ->get();
+        ;
 
         if (!$player)
             throw new Exception('Nenhum jogador encontrado');
@@ -105,26 +122,36 @@ class PlayerService extends BaseService implements PlayerContract
 
     public function getCurrentTeamStats(int $id)
     {
-        $player = $this->model::query()
-            ->where('id', $id)
-            ->whereHas('awards', function ($query) use ($id) {
-                $query->where('best_player', $id)
-                    ->orWhere('golden_boot', $id)
-                    ->orWhere('playmaker', $id)
-                    ->orWhere('golden_glove', $id)
-                ;
+        $playerStats = DB::table('players')
+            ->leftJoin('teams', 'players.team_id', '=', 'teams.id')
+            ->leftJoin('goals as scored_goals', 'players.id', '=', 'scored_goals.scorer_id')
+            ->leftJoin('goals as assists', 'players.id', '=', 'assists.assist_id')
+            ->leftJoin('awards', function ($join) {
+                $join->on('players.id', '=', 'awards.golden_boot')
+                    ->orOn('players.id', '=', 'awards.best_player')
+                    ->orOn('players.id', '=', 'awards.playmaker')
+                    ->orOn('players.id', '=', 'awards.golden_glove');
             })
-            ->with('team', 'goals', 'awards')
-            ->get()->map(fn($player) => [
-                'id' => $player->id,
-                'name' => $player->name,
-                'team_name' => $player->team->name ?? null
-            ]);
+            ->where('players.id', $id)
+            ->select(
+                'players.id',
+                'players.name',
+                'teams.name as team_name',
+                DB::raw('COUNT(DISTINCT scored_goals.id) as total_goals'),
+                DB::raw('COUNT(DISTINCT assists.id) as total_assists'),
+                DB::raw('COUNT(DISTINCT awards.golden_boot) as golden_boot_awards'),
+                DB::raw('COUNT(DISTINCT awards.best_player) as best_player_awards'),
+                DB::raw('COUNT(DISTINCT awards.playmaker) as playmaker_awards'),
+                DB::raw('COUNT(DISTINCT awards.golden_glove) as golden_glove_awards')
+            )
+            ->groupBy('players.id', 'players.name')
+            ->get();
+        ;
 
-        if (!$player) {
-            throw new Exception('Jogador não encontrado');
+        if (!$playerStats) {
+            return [];
         }
 
-        return $player;
+        return $playerStats;
     }
 }

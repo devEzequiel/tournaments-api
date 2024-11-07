@@ -49,6 +49,7 @@ class PlayerService extends BaseService implements PlayerContract
     {
         $player = DB::table('players')
             ->leftJoin('goals as scored_goals', 'players.id', '=', 'scored_goals.scorer_id')
+            ->leftJoin('teams', 'players.team_id', '=', 'teams.id')
             ->leftJoin('goals as assists', 'players.id', '=', 'assists.assist_id')
             ->leftJoin('awards', function ($join) {
                 $join->on('players.id', '=', 'awards.golden_boot')
@@ -59,7 +60,7 @@ class PlayerService extends BaseService implements PlayerContract
             ->select(
                 'players.id',
                 'players.name',
-                'players.',
+                'teams.name as team_name',
                 DB::raw('COUNT(DISTINCT scored_goals.id) as total_goals'),
                 DB::raw('COUNT(DISTINCT assists.id) as total_assists'),
                 DB::raw('COUNT(DISTINCT awards.golden_boot) as golden_boot_awards'),

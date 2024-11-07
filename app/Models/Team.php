@@ -6,7 +6,8 @@ class Team extends BaseModel
 {
     protected $fillable = [
         'name',
-        'team_id'
+        'first_color',
+        'second_color'
     ];
 
     public function players(): \Illuminate\Database\Eloquent\Relations\HasMany

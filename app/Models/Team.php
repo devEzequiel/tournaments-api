@@ -10,8 +10,8 @@ class Team extends BaseModel
         'second_color'
     ];
 
-    public function players(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function players(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->hasMany(Player::class);
+        return $this->belongsToMany(TeamPlayer::class, 'team_player', 'team_id', 'player_id');
     }
 }

@@ -9,9 +9,9 @@ class Player extends BaseModel
         'team_id'
     ];
 
-    public function team(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function team(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->belongsTo(Team::class);
+        return $this->belongsToMany(TeamPlayer::class, 'team_player', 'player_id', 'team_id');
     }
 
     public function previousTeams()

@@ -14,11 +14,6 @@ class Player extends BaseModel
         return $this->belongsToMany(TeamPlayer::class, 'team_player', 'player_id', 'team_id');
     }
 
-    public function previousTeams()
-    {
-        return $this->hasMany(PreviousPlayerTeam::class);
-    }
-
     public function goals()
     {
         return $this->hasMany(Goal::class, 'scorer_id');

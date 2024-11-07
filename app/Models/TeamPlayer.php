@@ -9,6 +9,8 @@ class TeamPlayer extends Model
 {
     use HasFactory;
 
+    protected $table = "team_player";
+
     public $timestamps = false;
     protected $fillable = [
         'player_id',

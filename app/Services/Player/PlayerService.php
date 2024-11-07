@@ -4,7 +4,7 @@ namespace App\Services\Player;
 
 use App\Contracts\PlayerContract;
 use App\Models\Player;
-use App\Models\PreviousPlayerTeam;
+use App\Models\TeamPlayer;
 use App\Services\BaseService;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +18,15 @@ class PlayerService extends BaseService implements PlayerContract
 
     public function create($data): bool
     {
-        return (bool) $this->model::create($data);
+        $player = $this->model::create($data);
+        $pivot_data = [
+            'team_id' => $data['team_id'],
+            'player_id' => $player->id,
+            'current_team' => true,
+            'joined_at' => now()
+        ];
+        TeamPlayer::create($pivot_data);
+        return true;
     }
 
     /**
@@ -97,15 +105,30 @@ class PlayerService extends BaseService implements PlayerContract
      */
     public function changeTeam($data): bool
     {
-        $player = $this->model::find((int) $data['player_id']);
 
-        if (!$player)
-            throw new Exception('Jogador não encontrado');
+        $previous_team = TeamPlayer::where('player_id', $data['player_id'])
+            ->where('current_team', true)
+            ->first();
 
-        $previous_team = $player->team->id;
-        PreviousPlayerTeam::create(['player_id' => $player->id, 'team_id' => $previous_team]);
+        if (!$previous_team) {
+            throw new Exception('Relação não encontrado');
+        }
 
-        return (bool) $player->update($data);
+        $previous_team->update([
+            'current_team' => false,
+            'left_at' => now()
+        ]);
+
+        TeamPlayer::create(
+            [
+                'team_id' => $data['new_team_id'],
+                'player_id' => $data['player_id '],
+                'current_team' => true,
+                'joined_at' => now()
+            ]
+        );
+
+        return true;
     }
 
     /**

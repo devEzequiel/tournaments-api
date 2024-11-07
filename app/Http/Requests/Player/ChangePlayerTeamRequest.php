@@ -25,7 +25,7 @@ class ChangePlayerTeamRequest extends FormRequest
     {
         return [
             'player_id' => ['string', 'required', 'exists:players,id'],
-            'team_id' => ['int', 'required', 'exists:teams,id'],
+            'new_team_id' => ['int', 'required', 'exists:teams,id'],
         ];
     }
 }

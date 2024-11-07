@@ -31,20 +31,39 @@ class PlayerService extends BaseService implements PlayerContract
 
     /**
      * @throws Exception
+     *
+     * return data from a especific player
      */
     public function find(int $id)
     {
-        $player = $this->model::query()
-            ->where('id', $id)
-            ->with('team')
-            ->get()->map(fn($player) => [
-                'id' => $player->id,
-                'name' => $player->name,
-                'team_name' => $player->team->name ?? null
-            ]);
+        $player = DB::table('players')
+            ->leftJoin('teams', 'players.team_id', '=', 'teams.id')
+            ->leftJoin('goals as scored_goals', 'players.id', '=', 'scored_goals.scorer_id')
+            ->leftJoin('goals as assists', 'players.id', '=', 'assists.assist_id')
+            ->leftJoin('awards', function ($join) {
+                $join->on('players.id', '=', 'awards.golden_boot')
+                    ->orOn('players.id', '=', 'awards.best_player')
+                    ->orOn('players.id', '=', 'awards.playmaker')
+                    ->orOn('players.id', '=', 'awards.golden_glove');
+            })
+            ->where('players.id', $id)
+            ->select(
+                'players.id',
+                'players.name',
+                'teams.name as team_name',
+                DB::raw('COUNT(DISTINCT scored_goals.id) as total_goals'),
+                DB::raw('COUNT(DISTINCT assists.id) as total_assists'),
+                DB::raw('COUNT(DISTINCT awards.golden_boot) as golden_boot_awards'),
+                DB::raw('COUNT(DISTINCT awards.best_player) as best_player_awards'),
+                DB::raw('COUNT(DISTINCT awards.playmaker) as playmaker_awards'),
+                DB::raw('COUNT(DISTINCT awards.golden_glove) as golden_glove_awards')
+            )
+            ->groupBy('players.id', 'players.name')
+            ->get();
+        ;
 
         if (!$player) {
-            throw new Exception('Jogador não encontrado');
+            throw new Exception('jogador não encontrado');
         }
 
         return $player;
@@ -52,10 +71,11 @@ class PlayerService extends BaseService implements PlayerContract
 
     /**
      * @throws Exception
+     * return data to every players
      */
     public function all()
     {
-        $player = DB::table('players')
+        $players = DB::table('players')
             ->leftJoin('goals as scored_goals', 'players.id', '=', 'scored_goals.scorer_id')
             ->leftJoin('teams', 'players.team_id', '=', 'teams.id')
             ->leftJoin('goals as assists', 'players.id', '=', 'assists.assist_id')
@@ -81,14 +101,16 @@ class PlayerService extends BaseService implements PlayerContract
             ->get();
         ;
 
-        if (!$player)
+        if (!$players)
             throw new Exception('Nenhum jogador encontrado');
 
-        return $player;
+        return $players;
     }
 
     /**
      * @throws Exception
+     *
+     * update player name or another data (no team)
      */
     public function update($data, $id): bool
     {
@@ -102,10 +124,11 @@ class PlayerService extends BaseService implements PlayerContract
 
     /**
      * @throws Exception
+     *
+     * update team player
      */
     public function changeTeam($data): bool
     {
-
         $previous_team = TeamPlayer::where('player_id', $data['player_id'])
             ->where('current_team', true)
             ->first();
@@ -133,6 +156,9 @@ class PlayerService extends BaseService implements PlayerContract
 
     /**
      * @throws Exception
+     *
+     * delete player
+     *
      */
     public function delete($id): bool
     {
@@ -144,33 +170,47 @@ class PlayerService extends BaseService implements PlayerContract
         return (bool) $player->delete();
     }
 
-    public function getCurrentTeamStats(int $id)
+    public function getStatsByTeam(array $data)
     {
+        $timestamps = TeamPlayer::where('player_id', $data['player_id'])
+            ->where('team_id', $data['player_id'])
+            ->first();
+
+        $startDate = $timestamps->joined_at;
+        $endDate = $timestamps->left_at;
+
         $playerStats = DB::table('players')
-            ->leftJoin('teams', 'players.team_id', '=', 'teams.id')
-            ->leftJoin('goals as scored_goals', 'players.id', '=', 'scored_goals.scorer_id')
-            ->leftJoin('goals as assists', 'players.id', '=', 'assists.assist_id')
+            ->leftJoin('goals', 'players.id', '=', 'goals.scorer_id')
+            ->leftJoin('fixtures as goal_fixtures', 'goals.fixture_id', '=', 'goal_fixtures.id')
+            ->leftJoin('assists', 'players.id', '=', 'assists.assist_id')
+            ->leftJoin('fixtures as assist_fixtures', 'assists.fixture_id', '=', 'assist_fixtures.id')
             ->leftJoin('awards', function ($join) {
-                $join->on('players.id', '=', 'awards.golden_boot')
-                    ->orOn('players.id', '=', 'awards.best_player')
+                $join->on('players.id', '=', 'awards.best_player')
+                    ->orOn('players.id', '=', 'awards.golden_boot')
                     ->orOn('players.id', '=', 'awards.playmaker')
                     ->orOn('players.id', '=', 'awards.golden_glove');
             })
-            ->where('players.id', $id)
+            ->leftJoin('championships', 'awards.championship_id', '=', 'championships.id')
             ->select(
-                'players.id',
                 'players.name',
-                'teams.name as team_name',
-                DB::raw('COUNT(DISTINCT scored_goals.id) as total_goals'),
+                DB::raw('COUNT(DISTINCT goals.id) as total_goals'),
                 DB::raw('COUNT(DISTINCT assists.id) as total_assists'),
-                DB::raw('COUNT(DISTINCT awards.golden_boot) as golden_boot_awards'),
                 DB::raw('COUNT(DISTINCT awards.best_player) as best_player_awards'),
+                DB::raw('COUNT(DISTINCT awards.golden_boot) as golden_boot_awards'),
                 DB::raw('COUNT(DISTINCT awards.playmaker) as playmaker_awards'),
                 DB::raw('COUNT(DISTINCT awards.golden_glove) as golden_glove_awards')
             )
+            ->where('players.id', $data['player_id'])
+            ->where(function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('goal_fixtures.timestamp', [$startDate, $endDate])
+                    ->orWhereBetween('assist_fixtures.timestamp', [$startDate, $endDate])
+                    ->orWhere(function ($subquery) use ($startDate, $endDate) {
+                        $subquery->where('championships.started_at', '<=', $endDate)
+                            ->where('championships.finished_at', '>=', $startDate);
+                    });
+            })
             ->groupBy('players.id', 'players.name')
-            ->get();
-        ;
+            ->first();
 
         if (!$playerStats) {
             return [];

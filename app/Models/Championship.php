@@ -7,11 +7,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Championship extends BaseModel
 {
+
+    public $timestamps = false;
     protected $fillable = [
         'name',
         'description',
         'rounds',
-        'playoffs'
+        'playoffs',
+        'started_at',
+        'finished_at',
     ];
 
     public function players(): HasMany

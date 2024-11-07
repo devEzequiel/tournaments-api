@@ -51,10 +51,10 @@ class PlayerController extends Controller
         }
     }
 
-    public function getCurrentTeamStats(int $id)
+    public function getStatsByTeam(array $data)
     {
         try {
-            $player = $this->service->getCurrentTeamStats($id);
+            $player = $this->service->getStatsByTeam($data);
 
             return $this->responseOk($player);
         } catch (Exception $e) {

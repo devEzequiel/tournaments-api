@@ -12,7 +12,9 @@ class Goal extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        '',
-        ''
+        'fixture_id',
+        'scorer_id',
+        'assist_id',
+        'pk'
     ];
 }

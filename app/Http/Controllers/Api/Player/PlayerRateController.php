@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api\Player;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Player\CreatePlayerRateRequest;
 use App\Services\Player\PlayerRateService;
+use Exception;
 
 class PlayerRateController extends Controller
 {
@@ -11,7 +13,7 @@ class PlayerRateController extends Controller
     {
     }
 
-    public function store(CreatePlayerRateRequest $request): JsonResponse
+    public function store(CreatePlayerRateRequest $request): \Illuminate\Http\JsonResponse
     {
         try {
             $data = $request->validated();

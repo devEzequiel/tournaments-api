@@ -13,7 +13,7 @@ class UpdateGoalRequest extends FormRequest
      */
     public function authorize()
     {
-        return false;
+        return true;
     }
 
     /**
@@ -24,7 +24,10 @@ class UpdateGoalRequest extends FormRequest
     public function rules()
     {
         return [
-            //
+            'fixture_id' => ['sometimes', 'required', 'integer', 'exists:fixtures,id'],
+            'scorer_id' => ['sometimes', 'required',  'integer', 'exists:players,id'],
+            'assist_id' => ['sometimes', 'required',  'integer', 'exists:players,id'],
+            'pk' => ['sometimes', 'required', 'boolean'],
         ];
     }
 }

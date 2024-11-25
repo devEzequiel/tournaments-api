@@ -62,18 +62,6 @@ class TeamService extends BaseService implements TeamContract
         return $team_players;
     }
 
-    public function getCurrentPlayersData(int $id)
-    {
-        $team_players_data = Team::query()->where('team_id', $id)
-            ->get();
-
-        if (!$team_players) {
-            throw new Exception('Nenhum jogador encontrado');
-        }
-
-        return $team_players;
-    }
-
     /**
      * @throws Exception
      */

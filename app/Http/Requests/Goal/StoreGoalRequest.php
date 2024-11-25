@@ -13,7 +13,7 @@ class StoreGoalRequest extends FormRequest
      */
     public function authorize()
     {
-        return false;
+        return true;
     }
 
     /**
@@ -24,7 +24,10 @@ class StoreGoalRequest extends FormRequest
     public function rules()
     {
         return [
-            //
+            'fixture_id' => ['required', 'integer', 'exists:fixtures,id'],
+            'scorer_id' => ['required',  'integer', 'exists:players,id'],
+            'assist_id' => ['required',  'integer', 'exists:players,id'],
+            'pk' => ['required', 'boolean'],
         ];
     }
 }

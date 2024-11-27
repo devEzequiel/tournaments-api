@@ -20,7 +20,7 @@ class PlayerRateController extends Controller
 
             $this->service->create($data);
 
-            return $this->responseCreated('Nota adicionada');
+            return $this->responseCreated();
         } catch (Exception $e) {
             return $this->responseUnprocessableEntity($e->getMessage());
         }

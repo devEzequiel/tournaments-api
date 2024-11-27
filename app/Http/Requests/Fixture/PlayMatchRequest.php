@@ -1,0 +1,34 @@
+<?php
+
+namespace App\Http\Requests\Goal;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class PlayMatchRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     *
+     * @return bool
+     */
+    public function authorize()
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, mixed>
+     */
+    public function rules()
+    {
+        return [
+            'fixture_id' => ['required', 'integer', 'exists:fixtures,id'],
+            'home_goals' => ['required', 'integer'],
+            'away_goals' => ['required', 'integer'],
+            'goals' => ['array', 'required'],
+            'rates' => ['array', 'required']
+        ];
+    }
+}

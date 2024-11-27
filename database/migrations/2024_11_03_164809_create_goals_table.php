@@ -14,9 +14,10 @@ return new class extends Migration {
     {
         Schema::create('goals', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('fixture_id');
-            $table->unsignedBigInteger('scorer_id');
-            $table->unsignedBigInteger('assist_id');
+            $table->unsignedBigInteger('fixture_id')->nullable();
+            $table->unsignedBigInteger('scorer_id')->nullable();
+            $table->unsignedBigInteger('assist_id')->nullable();
+            $table->boolean('own_goal')->default(false);
 
             $table->boolean('pk')->default(false);
 

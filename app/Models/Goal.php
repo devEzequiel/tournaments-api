@@ -15,6 +15,7 @@ class Goal extends Model
         'fixture_id',
         'scorer_id',
         'assist_id',
-        'pk'
+        'pk',
+        'own_goal'
     ];
 }

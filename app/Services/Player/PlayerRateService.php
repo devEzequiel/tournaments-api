@@ -4,6 +4,7 @@ namespace App\Services\Player;
 
 use App\Contracts\PlayerRateContract;
 use App\Models\PlayerRate;
+use App\Models\TeamPlayer;
 use App\Services\BaseService;
 
 class PlayerRateService extends BaseService implements PlayerRateContract
@@ -11,7 +12,7 @@ class PlayerRateService extends BaseService implements PlayerRateContract
 
     public function __construct()
     {
-        parent::__construct(new PlayerRate());
+        parent::__construct(model: new PlayerRate());
     }
 
     public function create($data): bool

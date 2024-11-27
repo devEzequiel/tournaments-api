@@ -10,6 +10,9 @@ use Exception;
 
 class ChampionshipService extends BaseService implements ChampionshipContract
 {
+
+    protected array $with = ['teams', 'fixtures'];
+
     public function __construct()
     {
         parent::__construct(new Championship());
@@ -50,7 +53,7 @@ class ChampionshipService extends BaseService implements ChampionshipContract
     public function all()
     {
         $championship = $this->model::query()
-            ->with('team')
+            ->with($this->with)
             ->get()->map(fn($championship) => [
                 'id' => $championship->id,
                 'name' => $championship->name,
@@ -131,7 +134,7 @@ class ChampionshipService extends BaseService implements ChampionshipContract
         return $fixtures;
     }
 
-    private static function createFixtures(array $teams, int $champ_id)
+    private static function createFixtures(array $teams, int $champ_id): void
     {
         $scheduleBuilder = new \ScheduleBuilder();
         $scheduleBuilder->setTeams($teams);

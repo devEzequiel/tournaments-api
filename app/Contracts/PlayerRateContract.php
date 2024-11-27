@@ -4,5 +4,5 @@ namespace App\Contracts;
 
 interface PlayerRateContract
 {
-    public function create();
+    public function create(array $data): bool;
 }

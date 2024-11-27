@@ -19,8 +19,23 @@ class AppServiceProvider extends ServiceProvider
         );
 
         $this->app->bind(
+            'App\Contracts\ChampionshipContract',
+            'App\Services\Championship\ChampionshipService'
+        );
+
+        $this->app->bind(
             'App\Contracts\TeamContract',
             'App\Services\Team\TeamService'
+        );
+
+        $this->app->bind(
+            'App\Contracts\PlayerRateContract',
+            'App\Services\Player\PlayerRateService'
+        );
+
+        $this->app->bind(
+            'App\Contracts\FixtureContract',
+            'App\Services\Fixture\FixtureService'
         );
     }
 

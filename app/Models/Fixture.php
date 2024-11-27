@@ -7,12 +7,15 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Fixture extends BaseModel
 {
+    public $timestamps = false;
     protected $fillable = [
         'championship_id',
         'home_team_id',
         'away_team_id',
         'round_number',
         'game_number',
+        'home_goals',
+        'away_goals',
         'playoff_round' //1 final, 2 semi, 3 terceiro lugar, 4 quartas
     ];
 

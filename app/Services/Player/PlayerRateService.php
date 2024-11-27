@@ -15,7 +15,7 @@ class PlayerRateService extends BaseService implements PlayerRateContract
         parent::__construct(model: new PlayerRate());
     }
 
-    public function create($data): bool
+    public function create(array $data): bool
     {
         $player = $this->model::create($data);
         $pivot_data = [

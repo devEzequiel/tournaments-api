@@ -20,6 +20,8 @@ return new class extends Migration {
 
             $table->integer('round_number');
             $table->integer('game_number');
+            $table->integer('home_goals')->nullable();
+            $table->integer('away_goals')->nullable();
             $table->enum('playoff_round', ['1', '2', '3', '4'])->nullable(); //1 final, 2 semi, 3 terceiro lugar, 4 quartas
             $table->timestamps();
 

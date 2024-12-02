@@ -11,12 +11,24 @@ class FixtureController extends Controller
     public function __construct(protected FixtureService $service)
     {
     }
+
     public function getFixtures(int $championship_id)
     {
         try {
-            $team = $this->service->getAllFixtures($championship_id);
+            $fixtures = $this->service->getAllFixtures($championship_id);
 
-            return $this->responseOk($team);
+            return $this->responseOk($fixtures);
+        } catch (\Exception $e) {
+            return $this->responseUnprocessableEntity($e->getMessage());
+        }
+    }
+
+    public function getUnplayedFixtures(int $championship_id)
+    {
+        try {
+            $fixtures = $this->service->getUnplayedFixtures($championship_id);
+
+            return $this->responseOk($fixtures);
         } catch (\Exception $e) {
             return $this->responseUnprocessableEntity($e->getMessage());
         }
@@ -28,7 +40,7 @@ class FixtureController extends Controller
         try {
             $this->service->playMatch($data);
 
-            return $this->responseOk();
+            return $this->responseOk((array)'Partida jogada com sucesso');
         } catch (\Exception $e) {
             return $this->responseUnprocessableEntity($e->getMessage());
         }

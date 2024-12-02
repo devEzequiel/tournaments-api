@@ -16,7 +16,9 @@ class Fixture extends BaseModel
         'game_number',
         'home_goals',
         'away_goals',
-        'playoff_round' //1 final, 2 semi, 3 terceiro lugar, 4 quartas
+        'playoff_round', //1 final, 2 semi, 3 terceiro lugar, 4 quartas
+        'is_played', //0 to play, 1 played
+        'played_at'
     ];
 
     public function homeTeam(): BelongsTo

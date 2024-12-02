@@ -6,6 +6,7 @@ use App\Models\Championship;
 use App\Models\Fixture;
 use App\Models\Goal;
 use App\Models\PlayerRate;
+use App\Models\Team;
 use App\Services\BaseService;
 
 class FixtureService extends BaseService
@@ -18,7 +19,7 @@ class FixtureService extends BaseService
         $this->championship = $championship;
     }
 
-    public function getAllFixtures(int $championship_id)
+    public function getAllFixtures(int $championship_id): \Illuminate\Database\Eloquent\Collection|array
     {
         return $this->model::query()
             ->with('homeTeam', 'awayTeam')
@@ -32,9 +33,17 @@ class FixtureService extends BaseService
         $fixture->update(
             [
                 'home_goals' => $data['home_goals'],
-                'away_goals' => $data['away_goals']
+                'away_goals' => $data['away_goals'],
+                'is_played' => true,
+                'played_at' => now(),
             ]
         );
+
+        if (!is_null($fixture->playoff_round) && $fixture->playoff_round > 1) {
+            return $this->createNextPlayoffRound(
+                $fixture->championship, $fixture->championship->teams, $fixture->playoff_round
+            );
+        }
 
         foreach ($data['goals'] as $goal) {
             Goal::create([
@@ -56,55 +65,129 @@ class FixtureService extends BaseService
 
         $champ = $this->championship::find($fixture->championship_id);
 
+        $has_fixtures = $champ->whereHas('fixtures', function ($query) use ($fixture) {
+            $query->where('is_played', false);
+        });
+
+        if (!$has_fixtures->count() && $champ->playoffs) {
+            $this->processPlayoffs($champ);
+        }
+
         return true;
     }
 
-    public function processPlayoffs()
+    public function processPlayoffs($championship)
     {
-        if (!$this->championship->playoffs) {
-            return; // Apenas processa se playoffs estiverem habilitados
-        }
+        $classifiedTeams = $this->getTopTeams($championship, $this->determinePlayoffTeamsCount($championship->rounds));
 
-        // Obtém os 4 primeiros colocados com base nos resultados
-        $classifiedTeams = $this->getClassifiedTeams($championship, 4);
-
-        if (count($classifiedTeams) < 4) {
-            throw new \Exception('Não há times suficientes para os playoffs.');
-        }
-
-        // Cria as semifinais (playoff_round = 2)
         $this->createPlayoffFixtures($championship, $classifiedTeams);
     }
 
     private
     function getTopTeams(Championship $championship, $limit)
     {
-        // Obtenha os times classificados com base em critérios como pontuação, saldo de gols etc.
         return Team::select('teams.*')
-            ->join('group_standings', 'teams.id', '=', 'group_standings.team_id')
-            ->where('group_standings.championship_id', $championship->id)
-            ->orderBy('group_standings.points', 'desc') // Ordenação por pontuação (ajuste conforme a regra)
+            ->join('fixtures as home_fixtures', function ($join) use ($championship) {
+                $join->on('teams.id', '=', 'home_fixtures.home_team_id')
+                    ->where('home_fixtures.championship_id', $championship->id)
+                    ->where('home_fixtures.is_played', true);
+            })
+            ->leftJoin('fixtures as away_fixtures', function ($join) use ($championship) {
+                $join->on('teams.id', '=', 'away_fixtures.away_team_id')
+                    ->where('away_fixtures.championship_id', $championship->id)
+                    ->where('away_fixtures.is_played', true);
+            })
+            ->selectRaw('
+        teams.*,
+        COALESCE(SUM(
+            CASE
+                WHEN home_fixtures.home_goals > home_fixtures.away_goals THEN 3
+                WHEN home_fixtures.home_goals = home_fixtures.away_goals THEN 1
+                ELSE 0
+            END
+        ) + SUM(
+            CASE
+                WHEN away_fixtures.away_goals > away_fixtures.home_goals THEN 3
+                WHEN away_fixtures.away_goals = away_fixtures.home_goals THEN 1
+                ELSE 0
+            END
+        ), 0) AS points,
+        COALESCE(SUM(home_fixtures.home_goals - home_fixtures.away_goals), 0) + COALESCE(SUM(away_fixtures.away_goals - away_fixtures.home_goals), 0) AS goal_difference,
+        COALESCE(SUM(away_fixtures . away_goals), 0) as away_goals_scored
+    ')
+            ->groupBy('teams.id')
+            ->orderByDesc('points')
+            ->orderByDesc('goal_difference')
+            ->orderByDesc('away_goals_scored')
             ->limit($limit)
             ->get();
     }
 
     private
-    function createPlayoffFixtures(Championship $championship, $classifiedTeams)
+    function createPlayoffFixtures(Championship $championship, $classifiedTeams): void
     {
-        // Semifinais
-        Fixture::create([
-            'championship_id' => $championship->id,
-            'home_team_id' => $classifiedTeams[0]->id,
-            'away_team_id' => $classifiedTeams[3]->id,
-            'playoff_round' => 2, // Semifinal
-        ]);
 
-        Fixture::create([
-            'championship_id' => $championship->id,
-            'home_team_id' => $classifiedTeams[1]->id,
-            'away_team_id' => $classifiedTeams[2]->id,
-            'playoff_round' => 2, // Semifinal
-        ]);
+        $firstIndex = 0;
+        $lastIndex = count($classifiedTeams) - 1;
 
+        while ($firstIndex < $lastIndex) {
+            $homeTeam = $classifiedTeams[$firstIndex];
+            $awayTeam = $classifiedTeams[$lastIndex];
+
+            // Create a new fixture for the playoffs with homeTeam and awayTeam
+            $this->model::create([
+                'home_team_id' => $homeTeam->id,
+                'away_team_id' => $awayTeam->id,
+                'championship_id' => $championship->id,
+                'is_played' => false,
+                'playoff_round' => 1,
+            ]);
+
+            $firstIndex++;
+            $lastIndex--;
+        }
+
+        return;
+    }
+
+
+    private function createNextPlayoffRound(Championship $championship, $classifiedTeams, int $currentRound)
+    {
+        $nextRound = $currentRound + 1;
+        $firstIndex = 0;
+        $lastIndex = count($classifiedTeams) - 1;
+
+        while ($firstIndex < $lastIndex) {
+            $homeTeam = $classifiedTeams[$firstIndex];
+            $awayTeam = $classifiedTeams[$lastIndex];
+
+            // Create a new fixture for the next round of playoffs with homeTeam and awayTeam
+            $this->model::create([
+                'home_team_id' => $homeTeam->id,
+                'away_team_id' => $awayTeam->id,
+                'championship_id' => $championship->id,
+                'is_played' => false,
+                'playoff_round' => $nextRound,
+            ]);
+
+            $firstIndex++;
+            $lastIndex--;
+        }
+
+        return  true;
+    }
+
+    private function determinePlayoffTeamsCount(int $playoff_rounds): int
+    {
+        switch ($playoff_rounds) {
+            case 1:
+                return 2; // Final
+            case 2:
+                return 4; // Semifinals
+            case 3:
+                return 8; // Quarterfinals
+            default:
+                throw new \InvalidArgumentException('Invalid number of playoff rounds.');
+        }
     }
 }

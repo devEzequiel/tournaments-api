@@ -27,6 +27,16 @@ class FixtureService extends BaseService
             ->get();
     }
 
+    public
+    function getUnplayedFixtures(int $championship_id): \Illuminate\Database\Eloquent\Collection|array
+    {
+        return $this->model::query()
+            ->with('homeTeam', 'awayTeam')
+            ->where('championship_id', $championship_id)
+            ->where('is_played', false)
+            ->get();
+    }
+
     public function playMatch(array $data)
     {
         $fixture = $this->model::find($data['fixture_id']);
@@ -174,7 +184,7 @@ class FixtureService extends BaseService
             $lastIndex--;
         }
 
-        return  true;
+        return true;
     }
 
     private function determinePlayoffTeamsCount(int $playoff_rounds): int

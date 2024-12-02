@@ -16,7 +16,6 @@ class FixtureService extends BaseService
     {
         parent::__construct(new Fixture());
         $this->championship = $championship;
-
     }
 
     public function getAllFixtures(int $championship_id)
@@ -55,6 +54,8 @@ class FixtureService extends BaseService
             ]);
         }
 
+        $champ = $this->championship::find($fixture->championship_id);
+
         return true;
     }
 
@@ -73,10 +74,6 @@ class FixtureService extends BaseService
 
         // Cria as semifinais (playoff_round = 2)
         $this->createPlayoffFixtures($championship, $classifiedTeams);
-    }
-
-    public function getAllFixtures(int $championship_id)
-    {
     }
 
     private
@@ -108,6 +105,6 @@ class FixtureService extends BaseService
             'away_team_id' => $classifiedTeams[2]->id,
             'playoff_round' => 2, // Semifinal
         ]);
+
     }
-}
 }

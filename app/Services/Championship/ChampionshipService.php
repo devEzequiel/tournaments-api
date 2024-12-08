@@ -31,14 +31,11 @@ class ChampionshipService extends BaseService implements ChampionshipContract
     /**
      * @throws Exception
      */
-    public function find(int $id)
+    public function find(int $championship_id)
     {
         $championship = $this->model::query()
-            ->where('id', $id)
-            ->get()->map(fn($championship) => [
-                'id' => $championship->id,
-                'name' => $championship->name
-            ]);
+            ->where('id', $championship_id)
+            ->get();
 
         if (!$championship) {
             throw new Exception('Campeonato não encontrado');
@@ -53,12 +50,7 @@ class ChampionshipService extends BaseService implements ChampionshipContract
     public function all()
     {
         $championship = $this->model::query()
-            ->with($this->with)
-            ->get()->map(fn($championship) => [
-                'id' => $championship->id,
-                'name' => $championship->name,
-                'team_name' => $championship->team->name ?? null
-            ]);
+            ->get();
 
         if (!$championship) throw new Exception('Nenhum campeonato encontrado');
 
@@ -68,9 +60,9 @@ class ChampionshipService extends BaseService implements ChampionshipContract
     /**
      * @throws Exception
      */
-    public function update($data, $id): bool
+    public function update($data, $championship_id): bool
     {
-        $championship = $this->model::find((int)$id);
+        $championship = $this->model::find((int)$championship_id);
 
         if (!$championship) throw new Exception('Campeonato não encontrado');
 
@@ -80,9 +72,9 @@ class ChampionshipService extends BaseService implements ChampionshipContract
     /**
      * @throws Exception
      */
-    public function delete($id): bool
+    public function delete(int $championship_id): bool
     {
-        $championship = $this->model::find($id);
+        $championship = $this->model::find($championship_id);
 
         if (!$championship) throw new Exception('Campeonato não encontrado');
 
@@ -92,49 +84,21 @@ class ChampionshipService extends BaseService implements ChampionshipContract
     /**
      * @throws Exception
      */
-    public function getFixtures(int $id)
+    public function getFixtures(int $championship_id)
     {
         $fixtures = Fixture::query()
-            ->where('championship_id', $id)
+            ->where('championship_id', $championship_id)
             ->orderBy('round_number', 'ASC')
             ->orderBy('game_number', 'ASC')
             ->with('awayTeam', 'homeTeam')
-            ->get()->map(fn($fixture) => [
-                'id' => $fixture->id,
-                'round' => $fixture->round_number,
-                'game' => $fixture->game_number,
-                'away_team' => $fixture->awayTeam->name ?? null,
-                'home_team' => $fixture->homeTeam->name ?? null
-            ])->toArray();
+            ->get()->toArray();
 
         if (!$fixtures) throw new Exception('Nenhum confronto encontrado');
 
         return $fixtures;
     }
 
-    /**
-     * @throws Exception
-     */
-    public function findFixture(int $fixture_id)
-    {
-        $fixtures = $this->model::query()
-            ->where('id', $fixture_id)
-            ->with('awayTeam', 'homeTeam')
-            ->get()->map(fn($fixture) => [
-                'id' => $fixture->id,
-                'name' => $fixture->name,
-                'away_team' => $fixture->awayTeam->name ?? null,
-                'home_team' => $fixture->homeTeam->name ?? null
-            ]);
-
-        if (!$fixtures) {
-            throw new Exception('Confronto não encontrado');
-        }
-
-        return $fixtures;
-    }
-
-    private static function createFixtures(array $teams, int $champ_id): void
+    private static function createFixtures(array $teams, int $championship_id): bool
     {
         $scheduleBuilder = new \ScheduleBuilder();
         $scheduleBuilder->setTeams($teams);
@@ -144,7 +108,7 @@ class ChampionshipService extends BaseService implements ChampionshipContract
 
         foreach ($schedule as $round => $teams) {
             $data = [];
-            $data['championship_id'] = $champ_id;
+            $data['championship_id'] = $championship_id;
             $data['round_number'] = $round;
             foreach ($teams as $game => $team) {
                 $data['game_number'] = $game;
@@ -154,6 +118,6 @@ class ChampionshipService extends BaseService implements ChampionshipContract
             }
         }
 
-        return;
+        return true;
     }
 }

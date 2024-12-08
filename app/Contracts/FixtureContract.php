@@ -4,10 +4,8 @@ namespace App\Contracts;
 
 interface FixtureContract
 {
-    public function processPlayoffs();
-    private function getTopTeams();
-    private function createPlayoffFixtures();
-    public function processNextPlayoffRound();
-    private function getWinnersFromRound();
-    private function getLosersFromRound();
+    public function getUnplayedFixtures(int $championship_id);
+    public function getAllFixtures(int $championship_id);
+
+    public function playMatch(array $data);
 }

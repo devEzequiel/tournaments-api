@@ -64,7 +64,10 @@ class TeamAnalyticService extends BaseService implements TeamAnalyticContract
         return $team_players_data;
     }
 
-    public function getTeamPlayersData(int $id)
+    /**
+     * @throws Exception
+     */
+    public function getPlayersData(int $id)
     {
         $team = $this->model::find($id);
 

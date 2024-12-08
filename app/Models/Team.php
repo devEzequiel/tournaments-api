@@ -14,4 +14,9 @@ class Team extends BaseModel
     {
         return $this->belongsToMany(TeamPlayer::class, 'team_player', 'team_id', 'player_id');
     }
+
+    public function fixtures(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Fixture::class);
+    }
 }

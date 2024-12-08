@@ -17,9 +17,9 @@ return new class extends Migration {
             $table->string('name');
             $table->text('description');
             $table->integer('rounds');
-            $table->boolean('playoffs');
+            $table->boolean('playoffs')->default(false);
             $table->integer('playoff_rounds')->nullable();
-            $table->timestamp('started_at');
+            $table->timestamp('started_at')->default(now());
             $table->timestamp('finished_at')->nullable();
         });
     }

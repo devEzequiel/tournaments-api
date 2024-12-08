@@ -6,5 +6,5 @@ interface TeamAnalyticContract
 {
     public function getCurrentPlayersData(int $id);
 
-    public  function getAllPlayersData(int $id);
+    public  function getPlayersData(int $id);
 }

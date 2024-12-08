@@ -49,17 +49,6 @@ class ChampionshipController extends Controller
         }
     }
 
-    public function showFixture(int $id): JsonResponse
-    {
-        try {
-            $championship = $this->service->findFixture($id);
-
-            return $this->responseOk($championship);
-        } catch (Exception $e) {
-            return $this->responseUnprocessableEntity($e->getMessage());
-        }
-    }
-
     public function getFixtures(int $id): JsonResponse
     {
         try {

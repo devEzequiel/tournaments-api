@@ -19,13 +19,18 @@ class Championship extends BaseModel
         'finished_at',
     ];
 
-    public function players(): HasMany
-    {
-        return $this->hasMany(Player::class);
-    }
-
     public function fixtures(): HasMany
     {
         return $this->hasMany(Fixture::class);
+    }
+
+    public function getUnplayedFixtures()
+    {
+        return $this->fixtures()->where('is_played', false)->get();
+    }
+
+    public function getPlayedFixtures()
+    {
+        return $this->fixtures()->where('is_played', true)->get();
     }
 }

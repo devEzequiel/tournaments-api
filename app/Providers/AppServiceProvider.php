@@ -28,6 +28,11 @@ class AppServiceProvider extends ServiceProvider
             'App\Services\Team\TeamService'
         );
 
+        this->app->bind(
+            'App\Contracts\AnalyticsContract\TeamAnalyticsContract',
+            'App\Services\Analytics\TeamAnalyticsService'
+        );
+
         $this->app->bind(
             'App\Contracts\PlayerRateContract',
             'App\Services\Player\PlayerRateService'

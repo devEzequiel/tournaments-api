@@ -20,6 +20,23 @@ class FixtureService extends BaseService implements FixtureContract
         $this->championship = $championship;
     }
 
+    /**
+     * @throws Exception
+     */
+    public function findFixture(int $fixture_id)
+    {
+        $fixtures = Fixture::query()
+            ->where('id', $fixture_id)
+            ->with('awayTeam', 'homeTeam')
+            ->get();
+
+        if (!$fixtures) {
+            throw new Exception('Confronto não encontrado');
+        }
+
+        return $fixtures;
+    }
+
     public function getAllFixtures(int $championship_id): \Illuminate\Database\Eloquent\Collection|array
     {
         return $this->model::query()
@@ -87,7 +104,7 @@ class FixtureService extends BaseService implements FixtureContract
         return true;
     }
 
-    private  function processPlayoffs($championship): void
+    private function processPlayoffs($championship): void
     {
         $classifiedTeams = $this->getTopTeams($championship, $this->determinePlayoffTeamsCount($championship->rounds));
 

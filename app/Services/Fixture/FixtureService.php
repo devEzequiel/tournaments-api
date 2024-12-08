@@ -2,6 +2,7 @@
 
 namespace App\Services\Fixture;
 
+use App\Contracts\FixtureContract;
 use App\Models\Championship;
 use App\Models\Fixture;
 use App\Models\Goal;
@@ -9,7 +10,7 @@ use App\Models\PlayerRate;
 use App\Models\Team;
 use App\Services\BaseService;
 
-class FixtureService extends BaseService
+class FixtureService extends BaseService implements FixtureContract
 {
     private Championship $championship;
 
@@ -86,7 +87,7 @@ class FixtureService extends BaseService
         return true;
     }
 
-    public function processPlayoffs($championship)
+    private  function processPlayoffs($championship): void
     {
         $classifiedTeams = $this->getTopTeams($championship, $this->determinePlayoffTeamsCount($championship->rounds));
 

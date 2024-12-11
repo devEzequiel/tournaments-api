@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Player;
+namespace App\Modules\Player;
 
 use App\Contracts\PlayerRateContract;
 use App\Models\PlayerRate;

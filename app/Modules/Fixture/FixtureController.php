@@ -1,10 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\Api\Fixture;
+namespace App\Modules\Fixture;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Goal\PlayMatchRequest;
-use App\Services\Fixture\FixtureService;
 
 class FixtureController extends Controller
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Player;
+namespace App\Modules\Player;
 
 use App\Contracts\PlayerContract;
 use App\Models\Player;

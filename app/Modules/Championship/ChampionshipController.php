@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Http\Controllers\Api\Championship;
+namespace App\Modules\Championship;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Championship\CreateChampionshipRequest;
 use App\Http\Requests\Championship\UpdateChampionshipRequest;
-use App\Services\Championship\ChampionshipService;
-use Illuminate\Http\JsonResponse;
 use Exception;
+use Illuminate\Http\JsonResponse;
+
 class ChampionshipController extends Controller
 {
     public function __construct(protected ChampionshipService $service)

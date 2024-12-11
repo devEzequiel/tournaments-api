@@ -1,10 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\Api\Player;
+namespace App\Modules\Player;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Player\CreatePlayerRateRequest;
-use App\Services\Player\PlayerRateService;
 use Exception;
 
 class PlayerRateController extends Controller

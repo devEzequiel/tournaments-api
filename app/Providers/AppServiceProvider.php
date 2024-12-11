@@ -15,17 +15,17 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(
             'App\Contracts\PlayerContract',
-            'App\Services\Player\PlayerService'
+            'App\Modules\Player\PlayerService'
         );
 
         $this->app->bind(
             'App\Contracts\ChampionshipContract',
-            'App\Services\Championship\ChampionshipService'
+            'App\Modules\Championship\ChampionshipService'
         );
 
         $this->app->bind(
             'App\Contracts\TeamContract',
-            'App\Services\Team\TeamService'
+            'App\Modules\Team\TeamService'
         );
 
         this->app->bind(
@@ -35,12 +35,12 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->bind(
             'App\Contracts\PlayerRateContract',
-            'App\Services\Player\PlayerRateService'
+            'App\Modules\Player\PlayerRateService'
         );
 
         $this->app->bind(
             'App\Contracts\FixtureContract',
-            'App\Services\Fixture\FixtureService'
+            'App\Modules\Fixture\FixtureService'
         );
     }
 

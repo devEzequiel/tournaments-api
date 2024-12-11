@@ -42,6 +42,11 @@ class AppServiceProvider extends ServiceProvider
             'App\Contracts\FixtureContract',
             'App\Modules\Fixture\FixtureService'
         );
+
+        $this->app->bind(
+            'App\Contracts\GoalContract',
+            'App\Modules\Goal\GoalService'
+        );
     }
 
     /**

@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Services\Analytics;
+namespace App\Modules\Team;
 
+use App\Contracts\Analytic\TeamAnalyticContract;
 use App\Models\Team;
 use App\Services\BaseService;
 use Exception;

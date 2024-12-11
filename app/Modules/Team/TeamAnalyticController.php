@@ -1,9 +1,8 @@
 <?php
 
-namespace App\Http\Controllers\Analytics;
+namespace App\Modules\Team;
 
 use App\Http\Controllers\Controller;
-use App\Services\Analytics\TeamAnalyticService;
 use Illuminate\Http\JsonResponse;
 
 class TeamAnalyticController extends Controller

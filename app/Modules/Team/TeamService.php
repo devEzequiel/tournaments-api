@@ -1,10 +1,8 @@
 <?php
 
-namespace App\Services\Team;
+namespace App\Modules\Team;
 
-use App\Contracts\PlayerContract;
 use App\Contracts\TeamContract;
-use App\Models\Player;
 use App\Models\Team;
 use App\Services\BaseService;
 use Exception;

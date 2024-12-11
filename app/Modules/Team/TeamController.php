@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Http\Controllers\Api\Team;
+namespace App\Modules\Team;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Team\CreateTeamRequest;
 use App\Http\Requests\Team\UpdateTeamRequest;
-use App\Services\Team\TeamService;
-use Illuminate\Http\JsonResponse;
 use Exception;
+use Illuminate\Http\JsonResponse;
+
 class TeamController extends Controller
 {
     public function __construct(protected TeamService $service)

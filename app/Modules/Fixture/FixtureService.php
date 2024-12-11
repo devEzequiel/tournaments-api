@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Fixture;
+namespace App\Modules\Fixture;
 
 use App\Contracts\FixtureContract;
 use App\Models\Championship;
@@ -9,6 +9,7 @@ use App\Models\Goal;
 use App\Models\PlayerRate;
 use App\Models\Team;
 use App\Services\BaseService;
+use App\Services\Fixture\Exception;
 
 class FixtureService extends BaseService implements FixtureContract
 {

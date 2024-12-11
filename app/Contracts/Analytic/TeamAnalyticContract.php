@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Analytics;
+namespace App\Contracts\Analytic;
 
 interface TeamAnalyticContract
 {

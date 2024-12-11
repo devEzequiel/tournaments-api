@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Analytics;
+namespace App\Modules\Player;
 
 use App\Contracts\Analytic\PlayerAnalyticContract;
 use App\Models\Player;

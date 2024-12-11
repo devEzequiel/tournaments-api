@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Analytics;
+namespace App\Modules\Championship;
 
 class ChampionshipAnalyticController
 {

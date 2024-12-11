@@ -1,9 +1,8 @@
 <?php
 
-namespace App\Http\Controllers\Analytics;
+namespace App\Modules\Player;
 
 use App\Http\Controllers\Controller;
-use App\Services\Analytics\PlayerAnalyticService;
 
 class PlayerAnalyticController extends Controller
 {
@@ -13,6 +12,6 @@ class PlayerAnalyticController extends Controller
 
     public function getPlsyr()
     {
-        
+
     }
 }

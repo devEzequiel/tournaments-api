@@ -1,14 +1,13 @@
 <?php
 
-namespace App\Http\Controllers\Api\Player;
+namespace App\Modules\Player;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Player\ChangePlayerTeamRequest;
 use App\Http\Requests\Player\CreatePlayerRequest;
 use App\Http\Requests\Player\UpdatePlayerRequest;
-use App\Services\Player\PlayerService;
-use Illuminate\Http\JsonResponse;
 use Exception;
+use Illuminate\Http\JsonResponse;
 
 class PlayerController extends Controller
 {

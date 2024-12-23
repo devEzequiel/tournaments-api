@@ -16,9 +16,9 @@ return new class extends Migration {
             $table->id();
             $table->unsignedBigInteger('championship_id'); //
 
-            $table->unsignedBigInteger('first_place'); //champion
-            $table->unsignedBigInteger('second_place'); //vice
-            $table->unsignedBigInteger('third_place'); //bronze
+            $table->unsignedBigInteger('first_place_id'); //champion
+            $table->unsignedBigInteger('second_place_id'); //vice
+            $table->unsignedBigInteger('third_place_id'); //bronze
 
             $table->unsignedBigInteger('best_player'); //player of the championship: biggest rate
             $table->unsignedBigInteger('golden_boot'); //most goals

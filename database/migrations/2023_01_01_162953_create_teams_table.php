@@ -16,7 +16,7 @@ return new class extends Migration {
             $table->id();
             $table->string('name');
             $table->string('first_color');
-            $table->string('second_color');
+            $table->string('second_color')->nullable();
             $table->timestamps();
         });
     }

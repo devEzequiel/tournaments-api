@@ -20,7 +20,7 @@ return new class extends Migration {
 
             $table->boolean('current_team')->default(true);
 
-            $table->timestamp('joined_at');
+            $table->timestamp('joined_at')->default(now());
             $table->timestamp('left_at')->nullable();
 
             $table->foreign('player_id')->references('id')->on('players')->onDelete('cascade');

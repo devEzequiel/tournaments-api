@@ -16,12 +16,10 @@ return new class extends Migration
         Schema::create('player_rates', function (Blueprint $table) {
             $table->id();
 
-            $table->unsignedBigInteger('fixture_id');
-            $table->unsignedBigInteger('player_id');
+            $table->unsignedBigInteger('fixture_id')->comment('id fixture');
+            $table->unsignedBigInteger('player_id')->comment('id player');
             $table->float('rate');
 
-
-            $table->foreign('championship_id')->references('id')->on('championships');
             $table->foreign('player_id')->references('id')->on('players');
             $table->foreign('fixture_id')->references('id')->on('fixtures');
 

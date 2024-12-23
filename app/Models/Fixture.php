@@ -5,6 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * @method static create(array $data)
+ */
 class Fixture extends BaseModel
 {
     public $timestamps = false;

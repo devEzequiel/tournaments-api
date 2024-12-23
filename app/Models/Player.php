@@ -5,8 +5,7 @@ namespace App\Models;
 class Player extends BaseModel
 {
     protected $fillable = [
-        'name',
-        'team_id'
+        'name'
     ];
 
     public function team(): \Illuminate\Database\Eloquent\Relations\BelongsToMany

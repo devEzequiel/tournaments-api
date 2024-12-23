@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+
 class Team extends BaseModel
 {
     protected $fillable = [
@@ -10,9 +12,12 @@ class Team extends BaseModel
         'second_color'
     ];
 
-    public function players(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+
+    public function players(): BelongsToMany
     {
-        return $this->belongsToMany(TeamPlayer::class, 'team_player', 'team_id', 'player_id');
+        return $this->belongsToMany(Player::class,
+            'team_player', 'team_id',
+            'player_id', 'id', 'id');
     }
 
     public function fixtures(): \Illuminate\Database\Eloquent\Relations\HasMany

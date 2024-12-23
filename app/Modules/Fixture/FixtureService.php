@@ -46,6 +46,26 @@ class FixtureService extends BaseService implements FixtureContract
             ->get();
     }
 
+    public function getFixturesWithBasicInfo(int $championship_id): \Illuminate\Database\Eloquent\Collection|array
+    {
+        return $this->model::query()
+//            ->join('teams as home_team', 'fixtures.home_team_id', '=', 'home_team.id')
+//            ->join('teams as away_team', 'fixtures.away_team_id', '=', 'away_team.id')
+//            ->with('homeTeam', 'awayTeam')
+            ->select([
+//                'home_team.name as home_team_name',
+//                'away_team.name as away_team_name',
+                'fixtures.round_number',
+                'fixtures.game_number',
+//                'homeTeam',
+//                'awayTeam',
+            ])
+            ->orderBy('fixtures.round_number', 'ASC')
+            ->orderBy('fixtures.game_number', 'ASC')
+            ->where('fixtures.championship_id', $championship_id)
+            ->get();
+    }
+
     public
     function getUnplayedFixtures(int $championship_id): \Illuminate\Database\Eloquent\Collection|array
     {

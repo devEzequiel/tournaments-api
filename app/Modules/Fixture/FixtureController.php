@@ -4,6 +4,7 @@ namespace App\Modules\Fixture;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Goal\PlayMatchRequest;
+use Illuminate\Http\JsonResponse;
 
 class FixtureController extends Controller
 {
@@ -15,6 +16,17 @@ class FixtureController extends Controller
     {
         try {
             $fixtures = $this->service->getAllFixtures($championship_id);
+
+            return $this->responseOk($fixtures);
+        } catch (\Exception $e) {
+            return $this->responseUnprocessableEntity($e->getMessage());
+        }
+    }
+
+    public function getFixturesWithBasicInfo(int $championship_id): JsonResponse
+    {
+        try {
+            $fixtures = $this->service->getFixturesWithBasicInfo($championship_id);
 
             return $this->responseOk($fixtures);
         } catch (\Exception $e) {

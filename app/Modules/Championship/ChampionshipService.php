@@ -24,7 +24,7 @@ class ChampionshipService extends BaseService implements ChampionshipContract
     public function create($data): bool
     {
         $champ = $this->model::create($data);
-        self::createFixtures($data['teams'], $champ->id);
+        self::createFixtures($data['teams'], $champ);
         return true;
     }
 
@@ -98,27 +98,32 @@ class ChampionshipService extends BaseService implements ChampionshipContract
         return $fixtures;
     }
 
-    private static function createFixtures(array $teams, int $championship_id): bool
+    private static function createFixtures(array $teams, Championship $champ)
     {
-        $scheduleBuilder = new \ScheduleBuilder();
-        $scheduleBuilder->setTeams($teams);
-        $scheduleBuilder->setRounds(10);
-        $scheduleBuilder->shuffle(14);
-        $schedule = $scheduleBuilder->build();
+        $scheduler = new RoundRobinScheduler();
+        $scheduler->setTeams($teams) // Define os times
+                        ->shuffle() // Embaralha os times
+                        ->setRounds($champ->rounds); // Define 3 turnos completos
 
-        foreach ($schedule as $round => $teams) {
+        $schedule = $scheduler->build();
+
+        $gameNumber = 1; // Inicializa o número do jogo
+
+        foreach ($schedule as $round => $matches) {
             $data = [];
-            $data['championship_id'] = $championship_id;
+            $data['championship_id'] = $champ->id;
             $data['round_number'] = $round;
-            foreach ($teams as $game => $team) {
-                $data['game_number'] = $game;
-                $data['home_team_id'] = $team[0];
-                $data['away_team_id'] = $team[1];
-                Fixture::create($data);
+
+            foreach ($matches as $match) {
+                $data['game_number'] = $gameNumber; // Número do jogo
+                $data['home_team_id'] = $match[0]; // Time "da casa"
+                $data['away_team_id'] = $match[1]; // Time "visitante"
+                Fixture::create($data); // Salva no banco de dados
+
+                $gameNumber++; // Incrementa o número do jogo
             }
         }
 
-        return true;
     }
 
     public function getStanding(int $championship_id)

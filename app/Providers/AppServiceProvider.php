@@ -28,7 +28,7 @@ class AppServiceProvider extends ServiceProvider
             'App\Modules\Team\TeamService'
         );
 
-        this->app->bind(
+        $this->app->bind(
             'App\Contracts\AnalyticsContract\TeamAnalyticsContract',
             'App\Services\Analytics\TeamAnalyticsService'
         );

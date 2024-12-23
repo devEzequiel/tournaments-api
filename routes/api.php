@@ -22,3 +22,4 @@ require_once('api/teams.php');
 require_once('api/players.php');
 require_once('api/utils.php');
 require_once('api/championship.php');
+require_once ('api/fixture.php');

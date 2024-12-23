@@ -31,7 +31,7 @@ return new class extends Migration {
             $table->foreign('away_team_id')->references('id')
                 ->on('teams');
             $table->foreign('championship_id')->references('id')
-                ->on('championships');
+                ->on('championships')->onDelete('cascade');
         });
     }
 

@@ -23,8 +23,10 @@ return new class extends Migration {
             $table->timestamp('joined_at')->default(now());
             $table->timestamp('left_at')->nullable();
 
-            $table->foreign('player_id')->references('id')->on('players')->onDelete('cascade');
-            $table->foreign('team_id')->references('id')->on('teams')->onDelete('cascade');
+            $table->foreign('player_id')->references('id')
+                ->on('players')->onDelete('cascade');
+            $table->foreign('team_id')->references('id')
+                ->on('teams');
         });
     }
 

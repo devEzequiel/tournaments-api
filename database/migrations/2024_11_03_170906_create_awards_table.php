@@ -25,7 +25,8 @@ return new class extends Migration {
             $table->unsignedBigInteger('playmaker'); //most assists
             $table->unsignedBigInteger('golden_glove'); //fewer goals conceded
 
-            $table->foreign('championship_id')->references('id')->on('championships');
+            $table->foreign('championship_id')->references('id')->on('championships')
+            ->onDelete('cascade');
 
             $table->foreign('first_place_id')->references('id')->on('teams');
             $table->foreign('second_place_id')->references('id')->on('teams');

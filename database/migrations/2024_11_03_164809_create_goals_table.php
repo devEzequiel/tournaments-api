@@ -21,7 +21,8 @@ return new class extends Migration {
 
             $table->boolean('pk')->default(false);
 
-            $table->foreign('fixture_id')->references('id')->on('fixtures');
+            $table->foreign('fixture_id')->references('id')->on('fixtures')
+            ->onDelete('cascade');
             $table->foreign('scorer_id')->references('id')->on('players');
             $table->foreign('assist_id')->references('id')->on('players');
         });

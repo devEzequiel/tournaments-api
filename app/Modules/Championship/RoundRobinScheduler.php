@@ -48,35 +48,49 @@ class RoundRobinScheduler
         $schedule = [];
         $teams = $this->teams;
         $numTeams = count($teams);
-        $numRoundsPerTurn = $numTeams - 1; // Um turno completo tem "N-1 rodadas" para N times.
+        $numRoundsPerTurn = $numTeams - 1; // Um turno completo tem "N-1 rodadas" para N equipas.
 
+        // Primeiro turno: cria o calendário base
+        $baseSchedule = []; // Para armazenar as partidas do primeiro turno
+        for ($round = 0; $round < $numRoundsPerTurn; $round++) {
+            $matches = [];
+
+            // Cria as partidas ("matches") da rodada.
+            for ($i = 0; $i < $numTeams / 2; $i++) {
+                $home = $teams[$i];
+                $away = $teams[$numTeams - 1 - $i];
+
+                // Se existir "bye", pula a partida.
+                if ($home !== null && $away !== null) {
+                    $matches[] = [$home, $away]; // Primeiro turno: casa e fora padrão
+                }
+            }
+
+            // Adiciona ao calendário base
+            $baseSchedule[$round + 1] = $matches;
+
+            // Rotaciona os times (mantendo o primeiro fixo).
+            $last = array_pop($teams);
+            array_splice($teams, 1, 0, [$last]);
+        }
+
+        // Adiciona os turnos (com alternância)
         for ($turn = 1; $turn <= $this->turns; $turn++) {
-            for ($round = 0; $round < $numRoundsPerTurn; $round++) {
-                $matches = [];
+            foreach ($baseSchedule as $round => $matches) {
+                $adjustedMatches = [];
+                foreach ($matches as $match) {
+                    [$home, $away] = $match;
 
-                // Cria as partidas ("matches") da rodada.
-                for ($i = 0; $i < $numTeams / 2; $i++) {
-                    $home = $teams[$i];
-                    $away = $teams[$numTeams - 1 - $i];
-
-                    // Se existir "bye", pula a partida.
-                    if ($home !== null && $away !== null) {
-                        if ($turn % 2 === 0) {
-                            // Turnos pares invertem "casa" e "fora".
-                            $matches[] = [$away, $home];
-                        } else {
-                            // Turnos ímpares mantêm "casa" e "fora".
-                            $matches[] = [$home, $away];
-                        }
+                    // Alterna casa e fora para turnos pares
+                    if ($turn % 2 === 0) {
+                        $adjustedMatches[] = [$away, $home];
+                    } else {
+                        $adjustedMatches[] = [$home, $away];
                     }
                 }
 
-                // Adiciona as partidas ao agendamento.
-                $schedule[($turn - 1) * $numRoundsPerTurn + $round + 1] = $matches;
-
-                // Rotaciona os times (mantendo o primeiro fixo).
-                $last = array_pop($teams);
-                array_splice($teams, 1, 0, [$last]);
+                // Adiciona as partidas ao agendamento com o turno correspondente
+                $schedule[($turn - 1) * $numRoundsPerTurn + $round] = $adjustedMatches;
             }
         }
 

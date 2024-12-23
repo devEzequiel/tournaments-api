@@ -102,28 +102,37 @@ class ChampionshipService extends BaseService implements ChampionshipContract
     {
         $scheduler = new RoundRobinScheduler();
         $scheduler->setTeams($teams) // Define os times
-                        ->shuffle() // Embaralha os times
-                        ->setRounds($champ->rounds); // Define 3 turnos completos
+        ->shuffle() // Embaralha os times
+        ->setRounds($champ->rounds); // Define o número de turnos (rounds)
 
-        $schedule = $scheduler->build();
+        $schedule = $scheduler->build(); // Cria o cronograma (rounds com matches)
 
-        $gameNumber = 1; // Inicializa o número do jogo
+        $numTeams = count($teams);
+        $numRoundsPerTurn = $numTeams - 1; // Número de rounds por turno completo
+        $turn = 1; // Começa no turno 1
+
+
+        $gameNumber = 1; // Inicializa o número de jogo dentro do turno
 
         foreach ($schedule as $round => $matches) {
+            // Calcula o turno correspondente com base no número do round
+            if (($round - 1) % $numRoundsPerTurn === 0 && $round !== 1) {
+                $turn++; // Incrementa o turno quando completamos um turno inteiro
+            }
+
             $data = [];
             $data['championship_id'] = $champ->id;
-            $data['round_number'] = $round;
+            $data['round_number'] = $turn; // Salva o número do turno (turn)
 
             foreach ($matches as $match) {
-                $data['game_number'] = $gameNumber; // Número do jogo
-                $data['home_team_id'] = $match[0]; // Time "da casa"
-                $data['away_team_id'] = $match[1]; // Time "visitante"
-                Fixture::create($data); // Salva no banco de dados
+                $data['game_number'] = $gameNumber;      // Número do jogo
+                $data['home_team_id'] = $match[0];       // Time da casa
+                $data['away_team_id'] = $match[1];       // Time visitante
+                Fixture::create($data);                 // Salva no banco de dados
 
                 $gameNumber++; // Incrementa o número do jogo
             }
         }
-
     }
 
     public function getStanding(int $championship_id)

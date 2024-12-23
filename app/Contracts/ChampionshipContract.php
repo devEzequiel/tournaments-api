@@ -10,4 +10,5 @@ interface ChampionshipContract
     public function getFixtures(int $championshipId);
     public function update (int $data, int $championship_id);
     public function delete (int $championship_id);
+
 }

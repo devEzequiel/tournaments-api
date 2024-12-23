@@ -3,7 +3,7 @@
 namespace App\Modules\Fixture;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Goal\PlayMatchRequest;
+use App\Http\Requests\Fixture\PlayMatchRequest;
 use Illuminate\Http\JsonResponse;
 
 class FixtureController extends Controller
@@ -47,11 +47,12 @@ class FixtureController extends Controller
 
     public function playMatch(PlayMatchRequest $request)
     {
-        $data = $request->validated();
+        $request->validated();
+        $data = $request->all();
         try {
             $this->service->playMatch($data);
 
-            return $this->responseOk((array)'Partida jogada com sucesso');
+            return $this->responseOk([], 'Partida jogada com sucesso');
         } catch (\Exception $e) {
             return $this->responseUnprocessableEntity($e->getMessage());
         }

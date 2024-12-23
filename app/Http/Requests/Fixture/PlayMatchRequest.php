@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Goal;
+namespace App\Http\Requests\Fixture;
 
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -27,8 +27,23 @@ class PlayMatchRequest extends FormRequest
             'fixture_id' => ['required', 'integer', 'exists:fixtures,id'],
             'home_goals' => ['required', 'integer'],
             'away_goals' => ['required', 'integer'],
-            'goals' => ['array', 'required'],
-            'rates' => ['array', 'required']
+            'goals' => ['array', 'nullable'],
+            'goals.scorer_id' => ['integer', 'nullable', 'exists:players,id'],
+            'goals.assist_id' => ['integer', 'nullable', 'exists:players,id'],
+            'goals.pk' => ['boolean', 'nullable'],
+            'goals.own_goal' => ['boolean', 'nullable'],
+            'rates' => ['array', 'nullable'],
+            'rates.player_id' => ['integer', 'nullable', 'exists:players,id'],
+            'rates.rate' => ['integer', 'nullable'],
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'goals.scorer_id.exists' => 'Marcador não existe.',
+            'goals.assist_id.exists' => 'Assistente não existe.',
+            'rates.player_id.exists' => 'Jogador não existe.'
         ];
     }
 }

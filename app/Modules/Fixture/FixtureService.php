@@ -49,16 +49,18 @@ class FixtureService extends BaseService implements FixtureContract
     public function getFixturesWithBasicInfo(int $championship_id): \Illuminate\Database\Eloquent\Collection|array
     {
         return $this->model::query()
-//            ->join('teams as home_team', 'fixtures.home_team_id', '=', 'home_team.id')
-//            ->join('teams as away_team', 'fixtures.away_team_id', '=', 'away_team.id')
-//            ->with('homeTeam', 'awayTeam')
+            ->join('teams as home_team', 'fixtures.home_team_id', '=', 'home_team.id')
+            ->join('teams as away_team', 'fixtures.away_team_id', '=', 'away_team.id')
             ->select([
-//                'home_team.name as home_team_name',
-//                'away_team.name as away_team_name',
+                'fixtures.id',
+                'home_team.name as home_team_name',
+                'away_team.name as away_team_name',
+                'home_team.first_color as home_team_color',
+                'home_team.second_color as home_team_second_color',
+                'away_team.first_color as away_team_color',
+                'away_team.second_color as away_team_second_color',
                 'fixtures.round_number',
                 'fixtures.game_number',
-//                'homeTeam',
-//                'awayTeam',
             ])
             ->orderBy('fixtures.round_number', 'ASC')
             ->orderBy('fixtures.game_number', 'ASC')
@@ -70,9 +72,23 @@ class FixtureService extends BaseService implements FixtureContract
     function getUnplayedFixtures(int $championship_id): \Illuminate\Database\Eloquent\Collection|array
     {
         return $this->model::query()
-            ->with('homeTeam', 'awayTeam')
-            ->where('championship_id', $championship_id)
-            ->where('is_played', false)
+            ->join('teams as home_team', 'fixtures.home_team_id', '=', 'home_team.id')
+            ->join('teams as away_team', 'fixtures.away_team_id', '=', 'away_team.id')
+            ->select([
+                'fixtures.id',
+                'home_team.name as home_team_name',
+                'away_team.name as away_team_name',
+                'home_team.first_color as home_team_color',
+                'home_team.second_color as home_team_second_color',
+                'away_team.first_color as away_team_color',
+                'away_team.second_color as away_team_second_color',
+                'fixtures.round_number',
+                'fixtures.game_number',
+            ])
+            ->orderBy('fixtures.round_number', 'ASC')
+            ->orderBy('fixtures.game_number', 'ASC')
+            ->where('fixtures.championship_id', $championship_id)
+            ->where('fixtures.is_played', false)
             ->get();
     }
 
@@ -93,23 +109,29 @@ class FixtureService extends BaseService implements FixtureContract
                 $fixture->championship, $fixture->championship->teams, $fixture->playoff_round
             );
         }
+        //apaga todos antes de adicionar
+        Goal::query()->where('fixture_id', $fixture->id)->delete();
 
         foreach ($data['goals'] as $goal) {
-            Goal::create([
-                'fixture_id' => $goal['fixture_id'],
-                'scorer_id' => $goal['scorer_id'],
-                'assist_id' => $goal['assist_id'],
-                'pk' => $goal['pk'],
-                'own_goal' => $goal['own_goal'],
-            ]);
+            Goal::query()
+                ->create([
+                    'fixture_id' => $fixture->id,
+                    'scorer_id' => $goal['scorer_id'],
+                    'assist_id' => $goal['assist_id'] ?? null,
+                    'pk' => $goal['pk'] ?? false,
+                    'own_goal' => $goal['own_goal'] ?? false,
+                ]);
         }
 
+        //Apaga todas as notas dos jogadores antes de adicionar, pra evitar duplicatas
+        PlayerRate::query()->where('fixture_id', $fixture->id)->delete();
         foreach ($data['rates'] as $rate) {
-            PlayerRate::create([
-                'fixture_id' => $rate['fixture_id'],
-                'player_id' => $rate['player_id'],
-                'rate' => $rate['rate']
-            ]);
+            PlayerRate::query()
+                ->create([
+                    'fixture_id' => $fixture->id,
+                    'player_id' => $rate['player_id'],
+                    'rate' => $rate['rate']
+                ]);
         }
 
         $champ = $this->championship::find($fixture->championship_id);

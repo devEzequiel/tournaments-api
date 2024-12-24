@@ -14,4 +14,5 @@ Route::controller(\App\Modules\Championship\ChampionshipAnalyticController::clas
 
         Route::get('standings/{championship_id}', 'getStandings');
         Route::get('players-stats/{championship_id}', 'getPlayersStats');
+        Route::get('team-stats/{championship_id}', 'getTeamStats');
     });

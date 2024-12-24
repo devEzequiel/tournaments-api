@@ -4,6 +4,7 @@ namespace App\Modules\Championship;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ChampionshipAnalyticController extends Controller
 {
@@ -28,6 +29,18 @@ class ChampionshipAnalyticController extends Controller
             $data = $this->service->getPlayersStats($champ_id);
 
             return $this->responseOk($data);
+        } catch (\Exception $e) {
+            return $this->responseUnprocessableEntity($e->getMessage());
+        }
+    }
+
+    public function getTeamStats(Request $request): JsonResponse
+    {
+        try {
+            $data = $request->all();
+            $stats = $this->service->getTeamStats($data);
+
+            return $this->responseOk($stats);
         } catch (\Exception $e) {
             return $this->responseUnprocessableEntity($e->getMessage());
         }

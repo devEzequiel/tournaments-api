@@ -109,29 +109,35 @@ class FixtureService extends BaseService implements FixtureContract
                 $fixture->championship, $fixture->championship->teams, $fixture->playoff_round
             );
         }
-        //apaga todos antes de adicionar
-        Goal::query()->where('fixture_id', $fixture->id)->delete();
 
-        foreach ($data['goals'] as $goal) {
-            Goal::query()
-                ->create([
-                    'fixture_id' => $fixture->id,
-                    'scorer_id' => $goal['scorer_id'],
-                    'assist_id' => $goal['assist_id'] ?? null,
-                    'pk' => $goal['pk'] ?? false,
-                    'own_goal' => $goal['own_goal'] ?? false,
-                ]);
+        if (isset($data['goals']) && count($data['goals']) > 0 ) {
+            //apaga todos antes de adicionar
+            Goal::query()->where('fixture_id', $fixture->id)->delete();
+
+            foreach ($data['goals'] as $goal) {
+                Goal::query()
+                    ->create([
+                        'fixture_id' => $fixture->id,
+                        'scorer_id' => $goal['scorer_id'],
+                        'assist_id' => $goal['assist_id'] ?? null,
+                        'pk' => $goal['pk'] ?? false,
+                        'own_goal' => $goal['own_goal'] ?? false,
+                    ]);
+            }
         }
 
-        //Apaga todas as notas dos jogadores antes de adicionar, pra evitar duplicatas
-        PlayerRate::query()->where('fixture_id', $fixture->id)->delete();
-        foreach ($data['rates'] as $rate) {
-            PlayerRate::query()
-                ->create([
-                    'fixture_id' => $fixture->id,
-                    'player_id' => $rate['player_id'],
-                    'rate' => $rate['rate']
-                ]);
+        if (isset($data['rates']) && count($data['rates']) > 0) {
+            //Apaga todas as notas dos jogadores antes de adicionar, pra evitar duplicatas
+            PlayerRate::query()->where('fixture_id', $fixture->id)->delete();
+
+            foreach ($data['rates'] as $rate) {
+                PlayerRate::query()
+                    ->create([
+                        'fixture_id' => $fixture->id,
+                        'player_id' => $rate['player_id'],
+                        'rate' => $rate['rate']
+                    ]);
+            }
         }
 
         $champ = $this->championship::find($fixture->championship_id);

@@ -3,7 +3,7 @@
         <div class="container d-flex justify-content-between align-items-center">
             <!-- Logo -->
             <div class="logo">
-                <h1 class="mb-0" style="color: #6a1b9a;">🏆 MyChampionships</h1>
+                <h1 class="mb-0" style="color: #6a1b9a;">🏆 DivanScore</h1>
             </div>
 
             <!-- Navegação -->
@@ -14,6 +14,12 @@
                     </li>
                     <li class="nav-item">
                         <InertiaLink href="/championships" class="nav-link text-dark">Championships</InertiaLink>
+                    </li>
+                    <li class="nav-item">
+                        <InertiaLink href="/teams" class="nav-link text-dark">Teams</InertiaLink>
+                    </li>
+                    <li class="nav-item">
+                        <InertiaLink href="/players" class="nav-link text-dark">Players</InertiaLink>
                     </li>
                     <li class="nav-item">
                         <InertiaLink href="/settings" class="nav-link text-dark">Settings</InertiaLink>

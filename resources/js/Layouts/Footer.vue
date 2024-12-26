@@ -2,7 +2,7 @@
     <footer class="footer bg-white text-center py-4 mt-5 border-top">
         <div class="container">
             <p class="mb-0">
-                &copy; 2023 <strong>MyChampionships</strong> | Desenvolvido com ❤️
+                &copy; 2023 <strong>DivanScore</strong> | Desenvolvido com ❤️
             </p>
         </div>
     </footer>

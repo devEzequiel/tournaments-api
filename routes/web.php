@@ -1,18 +1,29 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
-*/
+use Inertia\Inertia;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect('/championships'); // Redireciona para a página inicial
 });
+
+Route::get('/dashboard', function () {
+    return Inertia::render('Dashboard');
+})->name('dashboard');
+
+Route::get('/championships', function () {
+    // Aqui simulamos dados dos campeonatos para enviar ao componente Vue
+    $championships = [
+        ['id' => 1, 'name' => 'Championship A', 'status' => 'Active'],
+        ['id' => 2, 'name' => 'Championship B', 'status' => 'In Progress'],
+        ['id' => 3, 'name' => 'Championship C', 'status' => 'Finished'],
+    ];
+
+    return Inertia::render('Championships/Index', [
+        'championships' => $championships
+    ]);
+})->name('championships');
+
+Route::get('/settings', function () {
+    return Inertia::render('Settings'); // Aqui renderizará a página de Settings
+})->name('settings');

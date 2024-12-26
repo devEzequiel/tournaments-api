@@ -45,4 +45,27 @@ class ChampionshipAnalyticController extends Controller
             return $this->responseUnprocessableEntity($e->getMessage());
         }
     }
+
+    public function getTableData(int $champ): JsonResponse
+    {
+        try {
+            $stats = $this->service->getCrossedResults($champ);
+
+            return $this->responseOk($stats);
+        } catch (\Exception $e) {
+            return $this->responseUnprocessableEntity($e->getMessage());
+        }
+    }
+
+    public function getClashes(Request $request): JsonResponse
+    {
+        try {
+            $data = $request->all();
+            $clashes = $this->service->getHead2Head($data);
+
+            return $this->responseOk($clashes);
+        } catch (\Exception $e) {
+            return $this->responseUnprocessableEntity($e->getMessage());
+        }
+    }
 }

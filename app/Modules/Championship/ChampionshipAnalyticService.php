@@ -6,6 +6,7 @@ use App\Models\BaseModel;
 use App\Models\Championship;
 use App\Models\Fixture;
 use App\Models\Player;
+use App\Models\Team;
 use App\Services\BaseService;
 use Illuminate\Support\Facades\DB;
 
@@ -97,7 +98,125 @@ class ChampionshipAnalyticService extends BaseService
         return $standings;
     }
 
+    public function getCrossedResults(int $championship_id)
+    {
+        // Busca todos os confrontos e soma os gols de cada time no campeonato
+        $results = Fixture::query()
+            ->selectRaw('
+            LEAST(home_team_id, away_team_id) AS team1_id, -- Sempre o menor ID será o primeiro
+            GREATEST(home_team_id, away_team_id) AS team2_id, -- Sempre o maior ID será o segundo
+            SUM(CASE WHEN home_team_id < away_team_id THEN home_goals ELSE away_goals END) AS team1_goals,
+            SUM(CASE WHEN home_team_id < away_team_id THEN away_goals ELSE home_goals END) AS team2_goals
+        ')
+            ->where('championship_id', $championship_id) // Filtra pelo campeonato
+            ->where('is_played', true) // Considera apenas jogos já realizados
+            ->groupBy('team1_id', 'team2_id') // Garante o agrupamento por confrontos entre os mesmos times
+            ->get();
 
+        // Lista única de todos os times participantes
+        $teams = $results
+            ->pluck('team1_id', 'team1_id')
+            ->merge($results->pluck('team2_id', 'team2_id'))
+            ->unique()
+            ->mapWithKeys(function ($id) {
+                return [$id => Team::find($id)->name]; // Faz o mapeamento dos IDs para os nomes
+            });
+
+        $matrix = [];
+
+        // Construção da matriz com os resultados cruzados
+        foreach ($teams as $team_id_row => $team_name_row) {
+            $row = [];
+
+            foreach ($teams as $team_id_col => $team_name_col) {
+                // Caso "A vs A" (auto-confrontos)
+                if ($team_id_row === $team_id_col) {
+                    $row[$team_name_col] = null;
+                    continue;
+                }
+
+                // Busca os confrontos entre os dois times
+                $match = $results->first(function ($item) use ($team_id_row, $team_id_col) {
+                    return ($item->team1_id === $team_id_row && $item->team2_id === $team_id_col) ||
+                        ($item->team1_id === $team_id_col && $item->team2_id === $team_id_row);
+                });
+
+                // Preenche com os gols acumulados ou "0-0" se não houver confrontos
+                if ($match) {
+                    if ($match->team1_id === $team_id_row) { // Verifica quem é o team1
+                        $row[$team_name_col] = "{$match->team1_goals}-{$match->team2_goals}";
+                    } else { // Caso contrário, o team2 foi identificado como team1
+                        $row[$team_name_col] = "{$match->team2_goals}-{$match->team1_goals}";
+                    }
+                } else {
+                    $row[$team_name_col] = "0-0"; // Jogadores nunca se enfrentaram
+                }
+            }
+
+            $matrix[$team_name_row] = $row;
+        }
+
+        return [
+            'teams' => $teams, // Lista de times (IDs e nomes)
+            'matrix' => $matrix, // Matriz cruzada de resultados
+        ];
+    }
+
+    public function getHead2Head(array $data)
+    {
+        $team1_id = $data['team1_id'];
+        $team2_id = $data['team2_id'];
+        $championship_id = $data['championship_id'];
+
+        // Buscar os confrontos entre os dois times no campeonato
+        $clashes = Fixture::query()
+            ->where('championship_id', $championship_id) // Limitar ao campeonato especificado
+            ->where(function ($query) use ($team1_id, $team2_id) {
+                // Verifica se os times estavam em confronto (independentemente de mandante/visitante)
+                $query->where(function ($q) use ($team1_id, $team2_id) {
+                    $q->where('home_team_id', $team1_id)
+                        ->where('away_team_id', $team2_id);
+                })->orWhere(function ($q) use ($team1_id, $team2_id) {
+                    $q->where('home_team_id', $team2_id)
+                        ->where('away_team_id', $team1_id);
+                });
+            })
+            ->orderBy('game_number', 'asc') // Organizar por número do jogo
+            ->orderBy('round_number', 'asc') // Organizar por rodada
+            ->select(
+                'home_team_id',
+                'away_team_id',
+                'home_goals',
+                'away_goals',
+                'is_played'
+            )
+            ->get();
+
+        // Reorganizar os resultados para garantir que o team1 seja sempre o time da casa
+        $clashes->transform(function ($clash) use ($team1_id, $team2_id) {
+            // Ajustar para que team1 seja sempre 'home_team' e team2 seja 'away_team'
+            if ($clash->home_team_id !== $team1_id) {
+                // Inverte os campos de time e placar
+                $clash->home_team_id = $team1_id;
+                $clash->away_team_id = $team2_id;
+
+                // Também inverte os gols casa e visitante
+                $temp_home_goals = $clash->home_goals;
+                $clash->home_goals = $clash->away_goals;
+                $clash->away_goals = $temp_home_goals;
+            }
+
+            // Preencher gols como 0-0 caso o jogo não tenha sido realizado
+            if (!$clash->is_played) {
+                $clash->home_goals = 0;
+                $clash->away_goals = 0;
+            }
+
+            return $clash;
+        });
+
+        return $clashes;
+    }
 
     public function getPlayersStats(int $champ_id)
     {
@@ -167,16 +286,16 @@ class ChampionshipAnalyticService extends BaseService
                 ->get(),
 
             // Melhor Goleiro (maior rate entre goleiros)
-//        'golden_glove' => Player::query()
-//            ->select('players.id', 'players.name', DB::raw('AVG(player_rates.rate) as avg_rate'))
-//            ->join('player_rates', 'player_rates.player_id', '=', 'players.id')
-//            ->join('fixtures', 'fixtures.id', '=', 'player_rates.fixture_id')
-//            ->where('fixtures.championship_id', $champ_id)
-//            ->where('players.gk', true) // Apenas goleiros
-//            ->groupBy('players.id', 'players.name')
-//            ->orderByDesc('avg_rate') // Ordenação pela média do rate
-//            ->limit(3) // Limita ao top 3
-//            ->get()
+            'golden_glove' => Player::query()
+                ->select('players.id', 'players.name', DB::raw('AVG(player_rates.rate) as avg_rate'))
+                ->join('player_rates', 'player_rates.player_id', '=', 'players.id')
+                ->join('fixtures', 'fixtures.id', '=', 'player_rates.fixture_id')
+                ->where('fixtures.championship_id', $champ_id)
+                ->where('players.gk', true) // Apenas goleiros
+                ->groupBy('players.id', 'players.name')
+                ->orderByDesc('avg_rate') // Ordenação pela média do rate
+                ->limit(3) // Limita ao top 3
+                ->get()
         ];
 
         return [

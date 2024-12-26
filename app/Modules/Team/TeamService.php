@@ -100,4 +100,11 @@ class TeamService extends BaseService implements TeamContract
 
         return (bool) $team->delete();
     }
+
+    public function findByName(string $name)
+    {
+        return $this->model::query()
+            ->where('name', $name)
+            ->get();
+    }
 }

@@ -14,14 +14,18 @@ class TeamController extends Controller
     {
     }
 
-    public function index(): JsonResponse
+    public function index()
     {
         try {
             $data = $this->service->all();
 
-            return $this->responseOk($data);
+            return inertia('Teams/Index', [
+                'teams' => $data,
+            ]);
         } catch (Exception $e) {
-            return $this->responseUnprocessableEntity($e->getMessage());
+            return inertia('Error', [
+                'message' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -38,7 +42,22 @@ class TeamController extends Controller
         }
     }
 
-    public function show(int $id): JsonResponse
+    public function show(string $name)
+    {
+        try {
+            $team = $this->service->findByName($name);
+
+            return inertia('Teams/Index', [
+                'team' => $team,
+            ]);
+        } catch (Exception $e) {
+            return inertia('Error', [
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function detail(int $id): JsonResponse
     {
         try {
             $team = $this->service->find($id);

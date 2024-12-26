@@ -1,9 +1,0 @@
-// Mixin de borda arredondada
-@mixin rounded-border($radius: $border-radius) {
-    border-radius: $radius;
-}
-
-// Mixin de sombra
-@mixin box-shadow {
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}

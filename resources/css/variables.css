@@ -1,0 +1,15 @@
+/* Variáveis principais - convertidas para valores diretos */
+body {
+    background-color: #f7f7f7;
+    color: #333;
+    font-family: 'Roboto', sans-serif;
+}
+
+a {
+    color: #6a1b9a;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}

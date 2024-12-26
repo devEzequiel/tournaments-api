@@ -1,31 +1,78 @@
 <template>
     <DefaultLayout>
-        <!-- Título da Página -->
-        <div class="text-center my-5">
-            <h1 class="display-4" style="color: #6a1b9a;">🏆 Championships</h1>
-            <p class="text-muted">Acompanhe todos os campeonatos facilmente.</p>
+        <!-- Toast -->
+        <div v-if="toastMessage" class="alert alert-success" role="alert">
+            {{ toastMessage }}
         </div>
+
+        <!-- Botão + Modal para adicionar campeonato -->
+        <AddModal
+            :teams="teams"
+            @toast="showToast"
+            @reload="reloadPage"
+        />
 
         <!-- Lista de Campeonatos -->
         <div class="row">
-            <div class="col-md-4" v-for="championship in championships" :key="championship.id">
-                <Card :title="championship.name" :description="`Status: ${championship.status}`" />
+            <div
+                v-if="championships.length === 0"
+                class="text-center"
+            >
+                <p class="text-muted">Nenhum campeonato disponível no momento.</p>
+            </div>
+            <div
+                class="col-md-4"
+                v-for="championship in championships"
+                :key="championship.id"
+            >
+                <Card
+                    :title="championship.name"
+                    :description="championship.description"
+                    :rounds="championship.rounds"
+                    :status="championship.finished_at ? 'Finalizado' : 'Em andamento'"
+                    :playoffs="championship.playoffs"
+                    :playoff_rounds="championship.playoff_rounds"
+                    :started_at="championship.started_at"
+                    :finished_at="championship.finished_at"
+                    :link="`/championship/${championship.id}`"
+                />
             </div>
         </div>
     </DefaultLayout>
 </template>
 
 <script>
-import DefaultLayout from '../Layouts/DefaultLayout.vue';
-import Card from '../../Components/Card.vue';
+import DefaultLayout from '@/Layouts/DefaultLayout.vue';
+import AddModal from '@/Components/AddChampionshipModal.vue';
+import Card from '@/Components/ChampionshipCard.vue';
 
 export default {
     components: {
         DefaultLayout,
+        AddModal,
         Card,
     },
     props: {
-        championships: Array, // Campeonatos passados do Laravel
+        championships: Array,
+        teams: Array,
+    },
+    data() {
+        return {
+            toastMessage: '',
+        };
+    },
+    methods: {
+        showToast(message) {
+            this.toastMessage = message;
+
+            // Remove o toast após 3 segundos
+            setTimeout(() => {
+                this.toastMessage = '';
+            }, 3000);
+        },
+        reloadPage() {
+            this.$inertia.reload(); // Recarrega a página usando Inertia
+        },
     },
 };
 </script>

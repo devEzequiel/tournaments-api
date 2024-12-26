@@ -14,14 +14,18 @@ class ChampionshipController extends Controller
     {
     }
 
-    public function index(): JsonResponse
+    public function index()
     {
         try {
-            $data = $this->service->all();
+            $championships = $this->service->all();
 
-            return $this->responseOk($data);
+            return inertia('Championships/Index', [
+                'championships' => $championships,
+            ]);
         } catch (Exception $e) {
-            return $this->responseUnprocessableEntity($e->getMessage());
+            return inertia('Error', [
+                'message' => $e->getMessage(),
+            ]);
         }
     }
 

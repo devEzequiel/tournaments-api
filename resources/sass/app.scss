@@ -1,11 +1,4 @@
-// Imports
-@import 'base/variables';
-@import 'base/mixins';
-@import 'components/team-form';
+@import "variables";
 
-// Estilo base para o corpo da aplicação
-body {
-    font-family: $font-stack;
-    background-color: $background-color;
-    color: $text-color;
-}
+// Inclua o Bootstrap
+@import "~bootstrap/scss/bootstrap";

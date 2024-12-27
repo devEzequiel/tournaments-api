@@ -1,94 +1,96 @@
 <template>
-    <div
-        class="team-card shadow-sm"
-        @click="openOptionsModal"
-    >
-        <!-- Escudo -->
-        <div class="shield-wrapper">
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 100 120"
-                class="shield"
-            >
-                <!-- Borda preta do escudo -->
-                <path
-                    d="M50,0 L10,60 L50,120 L90,60 Z"
-                    stroke="black"
-                    stroke-width="2"
-                    fill="none"
-                />
-                <!-- Metade superior esquerda (cor primária) -->
-                <path
-                    :fill="firstColor"
-                    d="M50,0 L10,60 L50,120 Z"
-                />
-                <!-- Metade inferior direita (cor secundária) -->
-                <path
-                    :fill="secondColor"
-                    d="M50,0 L90,60 L50,120 Z"
-                />
-            </svg>
-        </div>
-
-        <!-- Nome do Time -->
-        <p class="team-name">{{ name }}</p>
-
-        <!-- Modal de Opções -->
+    <div>
         <div
-            v-if="showOptions"
-            class="modal-backdrop"
-            @click.self="showOptions = false"
+            class="team-card"
+            @click="showOptionsModal = true"
         >
-            <div class="modal-content">
-                <h3>Opções do Time</h3>
-                <button class="modal-btn" @click="viewTeam">Ver Time</button>
-                <button class="modal-btn" @click="openEditModal">Editar Time</button>
-                <button class="modal-close-btn" @click="showOptions = false">Fechar</button>
+            <div class="shield-wrapper">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 100 120"
+                    class="shield"
+                >
+                    <path
+                        d="M50,0 L10,60 L50,120 L90,60 Z"
+                        stroke="black"
+                        stroke-width="2"
+                        fill="none"
+                    />
+                    <path
+                        :fill="firstColor"
+                        d="M50,0 L10,60 L50,120 Z"
+                    />
+                    <path
+                        :fill="secondColor"
+                        d="M50,0 L90,60 L50,120 Z"
+                    />
+                </svg>
+            </div>
+            <div class="details">
+                <p class="team-name">{{ name }}</p>
+                <div class="loading-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
             </div>
         </div>
 
-        <!-- Modal de Edição -->
         <div
-            v-if="showEdit"
-            class="modal-backdrop"
-            @click.self="showEdit = false"
+            v-if="showOptionsModal"
+            class="modal d-block"
+            style="background: rgba(0, 0, 0, 0.5);"
         >
-            <div class="modal-content">
-                <h3>Editar Time</h3>
-                <form @submit.prevent="updateTeam">
-                    <div>
-                        <label for="team-name">Nome do Time:</label>
-                        <input id="team-name" v-model="teamData.name" required />
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">O que deseja fazer?</h5>
+                        <button
+                            type="button"
+                            class="btn-close"
+                            @click="closeOptionsModal"
+                        ></button>
                     </div>
-                    <div>
-                        <label for="team-color-1">Cor Primária:</label>
-                        <input id="team-color-1" v-model="teamData.primary_color" type="color" />
+                    <div class="modal-body d-flex justify-content-around">
+                        <button
+                            class="btn btn-secondary"
+                            @click="navigateToTeam"
+                        >
+                            Ver Time
+                        </button>
+                        <button
+                            class="btn btn-primary"
+                            @click="openEditModal"
+                        >
+                            Editar
+                        </button>
                     </div>
-                    <div>
-                        <label for="team-color-2">Cor Secundária:</label>
-                        <input id="team-color-2" v-model="teamData.secondary_color" type="color" />
-                    </div>
-                    <div>
-                        <button type="submit">Salvar</button>
-                        <button type="button" @click="showEdit = false">Cancelar</button>
-                    </div>
-                </form>
+                </div>
             </div>
         </div>
+
+        <EditTeamModal
+            ref="editTeamModal"
+            v-show="editModalVisible"
+            :teamId="teamId"
+            @toast="$emit('toast', $event)"
+            @reload="$emit('reload')"
+        />
     </div>
 </template>
 
 <script>
-import axios from "axios";
+import EditTeamModal from './EditTeamModal.vue';
 
 export default {
+    components: { EditTeamModal },
     props: {
-        name: {
-            type: String,
-            required: true,
-        },
         teamId: {
             type: Number,
+            required: true,
+        },
+        name: {
+            type: String,
             required: true,
         },
         firstColor: {
@@ -102,138 +104,127 @@ export default {
     },
     data() {
         return {
-            showOptions: false,
-            showEdit: false,
-            teamData: {
-                name: "",
-                primary_color: "",
-                secondary_color: "",
-            },
+            showOptionsModal: false,
+            editModalVisible: false,
         };
     },
     methods: {
-        // Abre a modal de opções
-        openOptionsModal() {
-            this.showOptions = true;
+        navigateToTeam() {
+            this.$inertia.visit(`/teams/${this.teamId}`);
         },
-
-        // Redireciona para a rota do time
-        viewTeam() {
-            this.$inertia.visit(`/teams/${this.name}`);
+        closeOptionsModal() {
+            this.showOptionsModal = false;
         },
+        openEditModal() {
+            this.editModalVisible = true;
+            this.closeOptionsModal();
 
-        // Carrega os dados do time e abre a modal de edição
-        async openEditModal() {
-            this.showOptions = false;
-            try {
-                const { data } = await axios.get(`/api/team/${this.teamId}/detail`);
-                this.teamData = {
-                    name: data.name,
-                    primary_color: data.primary_color,
-                    secondary_color: data.secondary_color,
-                };
-                this.showEdit = true;
-            } catch (error) {
-                console.error("Erro ao carregar os dados do time:", error);
+            if (this.$refs.editTeamModal) {
+                this.$refs.editTeamModal.openModal()
+                    .then(() => {
+                    })
+                    .catch(error => {
+                        console.error('Erro ao abrir modal:', error);
+                    });
             }
         },
-
-        // Atualiza os dados do time na API
-        async updateTeam() {
-            try {
-                await axios.put(`/api/teams/${this.teamId}`, {
-                    name: this.teamData.name,
-                    primary_color: this.teamData.primary_color,
-                    secondary_color: this.teamData.secondary_color,
-                });
-                this.showEdit = false;
-                // Atualize os dados no frontend se necessário
-                this.$emit("team-updated", this.teamData);
-            } catch (error) {
-                console.error("Erro ao atualizar o time:", error);
-            }
+        closeEditModal() {
+            this.editModalVisible = false;
         },
     },
 };
 </script>
 
 <style scoped>
-/* Geral do card */
 .team-card {
     display: flex;
+    flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    padding: 15px;
-    border: 1px solid #ddd;
+    margin-bottom: 20px;
+    position: relative;
+    padding: 1rem;
     cursor: pointer;
-    background: #fff;
-    transition: background 0.3s;
-}
-.team-card:hover {
-    background: rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.06);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
 }
 
-/* Escudo */
+.team-card:hover {
+    background-color: #f7f9fc;
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
 .shield-wrapper {
-    width: 50px;
-    height: 60px;
+    width: 40px;
+    height: 50px;
     display: flex;
     justify-content: center;
     align-items: center;
     margin-right: 15px;
-}
-.team-name {
-    font-size: 1rem;
-    font-weight: bold;
-    color: #333;
-    flex: 1;
+    position: relative;
 }
 
-/* Estilização do modal */
-.modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
+.shield {
     width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    height: auto;
+}
+
+.details {
     display: flex;
-    justify-content: center;
+    flex: 1;
+    justify-content: space-between;
     align-items: center;
-    z-index: 1000;
 }
-.modal-content {
-    background: #fff;
-    padding: 20px;
-    border-radius: 5px;
-    width: 90%;
-    max-width: 400px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    text-align: center;
-}
-.modal-content h3 {
-    margin-bottom: 20px;
-}
-.modal-btn {
-    display: block;
-    margin: 10px auto;
-    padding: 10px 15px;
+
+.team-name {
+    font-weight: bold;
+    color: #333333;
     font-size: 1rem;
-    color: #fff;
-    background: #6c63ff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+    margin: 0;
+    word-break: break-word;
+    text-align: left;
 }
-.modal-btn:hover {
-    background: #574ce0;
+
+.loading-dots {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0.9);
+    transition: opacity 0.2s ease, transform 0.2s ease;
 }
-.modal-close-btn {
-    margin-top: 10px;
-    color: #333;
-    background: transparent;
-    border: none;
-    font-size: 0.9rem;
-    cursor: pointer;
+
+.loading-dots span {
+    width: 6px;
+    height: 6px;
+    background-color: #6a1b9a;
+    border-radius: 50%;
+    animation: bounce 1.5s infinite;
+}
+
+.loading-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.loading-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes bounce {
+    0%, 80%, 100% {
+        transform: scale(0);
+    }
+    40% {
+        transform: scale(1);
+    }
+}
+
+.team-card:hover .loading-dots {
+    opacity: 1;
+    transform: scale(1);
 }
 </style>

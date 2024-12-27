@@ -1,124 +1,72 @@
 <template>
-    <div
-        class="team-card shadow-sm"
-        @click="openOptionsModal"
-    >
-        <!-- Escudo -->
-        <div class="shield-wrapper">
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 100 120"
-                class="shield"
-            >
-                <!-- Borda preta do escudo -->
-                <path
-                    d="M50,0 L10,60 L50,120 L90,60 Z"
-                    stroke="black"
-                    stroke-width="2"
-                    fill="none"
-                />
-                <!-- Metade superior esquerda (cor primária) -->
-                <path
-                    :fill="firstColor"
-                    d="M50,0 L10,60 L50,120 Z"
-                />
-                <!-- Metade inferior direita (cor secundária) -->
-                <path
-                    :fill="secondColor"
-                    d="M50,0 L90,60 L50,120 Z"
-                />
-            </svg>
-        </div>
-
-        <!-- Nome do Time -->
-        <p class="team-name">{{ name }}</p>
-
-        <!-- Modal de Opções -->
-        <div
-            v-if="showOptions"
-            class="modal d-block"
-            style="background: rgba(0, 0, 0, 0.5);"
-            @click.self="showOptions = false"
+    <div>
+        <!-- Botão principal -->
+        <button
+            class="btn btn-primary my-4"
+            @click="showModal = true"
         >
-            <div class="modal-dialog modal-dialog-centered">
+            + Adicionar Time
+        </button>
+
+        <!-- Modal -->
+        <div
+            v-if="showModal"
+            class="modal-overlay"
+        >
+            <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Opções do Time</h5>
+                        <h5 class="modal-title">Adicionar Time</h5>
+                        <!-- Botão "X" para fechar -->
                         <button
-                            type="button"
                             class="btn-close"
-                            @click="showOptions = false"
-                        ></button>
+                            @click="closeModal"
+                            aria-label="Close"
+                        >
+                            &times;
+                        </button>
                     </div>
                     <div class="modal-body">
-                        <button class="btn btn-info mb-2 w-100" @click="viewTeam">Ver Time</button>
-                        <button class="btn btn-primary w-100" @click="openEditModal">Editar Time</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal de Edição -->
-        <div
-            v-if="showEdit"
-            class="modal d-block"
-            style="background: rgba(0, 0, 0, 0.5);"
-            @click.self="showEdit = false"
-        >
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Editar Time</h5>
-                        <button
-                            type="button"
-                            class="btn-close"
-                            @click="showEdit = false"
-                        ></button>
-                    </div>
-                    <div class="modal-body">
-                        <!-- Formulário -->
-                        <form @submit.prevent="updateTeam">
+                        <form @submit.prevent="submitForm">
                             <div class="mb-3">
-                                <label for="name" class="form-label">Nome</label>
+                                <label for="name" class="form-label">Nome do Time</label>
                                 <input
                                     type="text"
                                     id="name"
                                     class="form-control"
-                                    v-model="teamData.name"
+                                    v-model="form.name"
                                     required
                                 />
                             </div>
 
                             <div class="mb-3">
-                                <label for="primaryColor" class="form-label">Cor Primária</label>
+                                <label for="firstColor" class="form-label">Cor Primária</label>
                                 <input
                                     type="color"
-                                    id="primaryColor"
+                                    id="firstColor"
                                     class="form-control form-control-color"
-                                    v-model="teamData.primary_color"
+                                    v-model="form.first_color"
                                     required
                                 />
                             </div>
 
                             <div class="mb-3">
-                                <label for="secondaryColor" class="form-label">Cor Secundária</label>
+                                <label for="secondColor" class="form-label">Cor Secundária</label>
                                 <input
                                     type="color"
-                                    id="secondaryColor"
+                                    id="secondColor"
                                     class="form-control form-control-color"
-                                    v-model="teamData.secondary_color"
+                                    v-model="form.second_color"
                                     required
                                 />
                             </div>
 
-                            <!-- Botões -->
-                            <button type="submit" class="btn btn-success w-100">Salvar</button>
+                            <!-- Botão salvar -->
                             <button
-                                type="button"
-                                class="btn btn-secondary w-100 mt-2"
-                                @click="showEdit = false"
+                                type="submit"
+                                class="btn btn-purple"
                             >
-                                Cancelar
+                                Salvar
                             </button>
                         </form>
                     </div>
@@ -132,75 +80,37 @@
 import axios from "axios";
 
 export default {
-    props: {
-        name: {
-            type: String,
-            required: true,
-        },
-        teamId: {
-            type: Number,
-            required: true,
-        },
-        firstColor: {
-            type: String,
-            required: true,
-        },
-        secondColor: {
-            type: String,
-            required: true,
-        },
-    },
     data() {
         return {
-            showOptions: false,
-            showEdit: false,
-            teamData: {
+            showModal: false,
+            form: {
                 name: "",
-                primary_color: "",
-                secondary_color: "",
+                first_color: "#000000",
+                second_color: "#FFFFFF",
             },
         };
     },
     methods: {
-        // Abre a modal de opções
-        openOptionsModal() {
-            this.showOptions = true;
+        closeModal() {
+            this.showModal = false;
+            this.resetForm();
         },
-
-        // Redireciona para a rota do time
-        viewTeam() {
-            this.$inertia.visit(`/teams/${this.name}`);
+        resetForm() {
+            this.form = {
+                name: "",
+                first_color: "#000000",
+                second_color: "#FFFFFF",
+            };
         },
-
-        // Carrega os dados do time e abre a modal de edição
-        async openEditModal() {
-            this.showOptions = false; // Fecha a modal de opções
+        async submitForm() {
             try {
-                const { data } = await axios.get(`/api/teams/${this.teamId}`);
-                this.teamData = {
-                    name: data.name,
-                    primary_color: data.primary_color,
-                    secondary_color: data.secondary_color,
-                };
-                this.showEdit = true; // Abre a modal de edição
+                await axios.post("/api/team", this.form);
+                this.$emit("toast", "Novo time adicionado com sucesso!");
+                this.closeModal();
+                this.$emit("reload");
             } catch (error) {
-                console.error("Erro ao carregar os dados do time:", error);
-            }
-        },
-
-        // Atualiza os dados do time na API
-        async updateTeam() {
-            try {
-                await axios.put(`/api/teams/${this.teamId}`, {
-                    name: this.teamData.name,
-                    primary_color: this.teamData.primary_color,
-                    secondary_color: this.teamData.secondary_color,
-                });
-                this.showEdit = false;
-                // Atualize os dados no frontend, se necessário
-                this.$emit("team-updated", this.teamData);
-            } catch (error) {
-                console.error("Erro ao atualizar o time:", error);
+                console.error(error);
+                this.$emit("toast", "Erro ao adicionar o time.");
             }
         },
     },
@@ -208,34 +118,123 @@ export default {
 </script>
 
 <style scoped>
-.team-card {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 15px;
-    border: 1px solid #ddd;
+/* Botão principal estilizado */
+.btn-primary {
+    background: linear-gradient(45deg, #6a1b9a, #8e44ad);
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 1rem;
+    border: none;
+    border-radius: 50px;
+    padding: 10px 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
     cursor: pointer;
-    background: #fff;
-    transition: background 0.3s;
 }
 
-.team-card:hover {
-    background: rgba(0, 0, 0, 0.05);
+.btn-primary:hover {
+    background: linear-gradient(45deg, #8e44ad, #6a1b9a);
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
 }
 
-.shield-wrapper {
-    width: 50px;
-    height: 60px;
+.btn-primary:focus {
+    outline: none;
+    box-shadow: 0 0 8px rgba(138, 43, 226, 0.5);
+}
+
+/* Modal Overlay */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-right: 15px;
+    z-index: 9999;
 }
 
-.team-name {
-    font-size: 1rem;
+/* Modal Dialog */
+.modal-dialog {
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 2rem;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 0.3s ease;
+}
+
+/* Botão "X" para fechar a modal */
+.btn-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #6a1b9a;
+    cursor: pointer;
+    transition: transform 0.3s ease, color 0.3s ease;
     font-weight: bold;
-    color: #333;
-    flex: 1;
+}
+
+.btn-close:hover {
+    color: #8e44ad;
+    transform: scale(1.2);
+}
+
+.btn-close:focus {
+    outline: none;
+}
+
+/* Modal Header */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Modal Title */
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #6a1b9a;
+}
+
+.modal-content {
+    padding: 1rem;
+}
+
+/* Botão "Salvar" estilizado em roxo */
+.btn-purple {
+    background: linear-gradient(45deg, #6a1b9a, #8e44ad);
+    color: #ffffff;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-purple:hover {
+    background: linear-gradient(45deg, #8e44ad, #6a1b9a);
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Animação para abrir a modal */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 </style>

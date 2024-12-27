@@ -26,12 +26,7 @@ class TeamService extends BaseService implements TeamContract
     {
         $team = $this->model::query()
             ->where('id', $id)
-            ->with('players')
-            ->get()->map(fn($team) => [
-                'id' => $team->id,
-                'name' => $team->name,
-                'players' => $team->players->pluck('name')
-            ])->toArray();
+            ->first();
 
         if (!$team) {
             throw new Exception('Time não encontrado');
@@ -105,6 +100,6 @@ class TeamService extends BaseService implements TeamContract
     {
         return $this->model::query()
             ->where('name', $name)
-            ->get();
+            ->first();
     }
 }

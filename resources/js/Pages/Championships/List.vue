@@ -9,19 +9,19 @@
                 <li class="nav-item">
                     <button
                         class="nav-link"
-                        :class="{ active: activeTab === 'info' }"
-                        @click="activeTab = 'info'"
+                        :class="{ active: activeTab === 'matches' }"
+                        @click="activeTab = 'matches'; fetchMatches()"
                     >
-                        Info
+                        Matches
                     </button>
                 </li>
                 <li class="nav-item">
                     <button
                         class="nav-link"
-                        :class="{ active: activeTab === 'matches' }"
-                        @click="activeTab = 'matches'; fetchMatches()"
+                        :class="{ active: activeTab === 'rank' }"
+                        @click="activeTab = 'rank'"
                     >
-                        Matches
+                        Rank
                     </button>
                 </li>
                 <li class="nav-item">
@@ -36,10 +36,10 @@
                 <li class="nav-item">
                     <button
                         class="nav-link"
-                        :class="{ active: activeTab === 'rank' }"
-                        @click="activeTab = 'rank'"
+                        :class="{ active: activeTab === 'info' }"
+                        @click="activeTab = 'info'"
                     >
-                        Rank
+                        Info
                     </button>
                 </li>
             </ul>
@@ -79,7 +79,7 @@ export default {
     data() {
         return {
             matches: [], // Lista de partidas do campeonato
-            activeTab: "Matches", // Aba ativa
+            activeTab: "matches", // Aba ativa por padrão
         };
     },
     computed: {
@@ -133,21 +133,52 @@ export default {
     margin-bottom: 1.5rem;
 }
 
-.nav-tabs .nav-link {
-    cursor: pointer;
+/* Estilo das abas */
+.nav-tabs {
+    display: flex;
+    padding: 0;
+    margin-bottom: 1.5rem;
+    list-style: none;
+    gap: 0.5rem;
+    justify-content: center;
+    border-bottom: 2px solid #ddd;
 }
 
-.nav-tabs .nav-link.active {
+.nav-item {
+    list-style: none;
+}
+
+.nav-link {
+    background: transparent;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 0.5rem 1.5rem;
+    color: #6a1b9a;
+    text-align: center;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s;
+}
+
+.nav-link:hover {
+    background-color: #e2cdf1; /* Efeito hover */
+    color: #5a1484;
+}
+
+.nav-link.active {
     background-color: #6a1b9a;
     color: #ffffff;
     border-color: #6a1b9a;
+    transform: scale(1.1); /* Destaque visual na aba ativa */
 }
 
+/* Conteúdo das Tabs */
 .tab-content {
-    padding: 1rem;
+    padding: 1.5rem;
     background: #ffffff;
     border: 1px solid #ddd;
-    border-radius: 5px;
+    border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 </style>

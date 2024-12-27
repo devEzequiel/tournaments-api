@@ -1,8 +1,8 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import axios from "axios";
+import ClashModal from "@/Components/ClashModal.vue";
 
-// Propriedades recebidas
 const props = defineProps({
     championshipId: {
         type: Number,
@@ -10,19 +10,19 @@ const props = defineProps({
     },
 });
 
-// Reatividade para armazenar os dados da tabela
+// Estados
 const teams = ref([]);
 const matrix = ref({});
 const loading = ref(true);
 
-// Reatividade para controle da modal
+// Estados para a Modal
 const showModal = ref(false);
 const selectedClash = ref([]);
 const modalLoading = ref(false);
 const team1Name = ref("");
 const team2Name = ref("");
 
-// Função para buscar os dados da matriz cruzada da API
+// Função para buscar dados
 const fetchTableData = async () => {
     try {
         const response = await axios.get(`/api/championship/table-data/${props.championshipId}`);
@@ -33,41 +33,38 @@ const fetchTableData = async () => {
         }
     } catch (error) {
         console.error("Erro ao buscar os dados da tabela cruzada: ", error);
-        loading.value = false;
     }
 };
 
-// Função para buscar dados de confrontos da API
 const fetchClashData = async (team1Id, team2Id, team1, team2) => {
-    showModal.value = true; // Exibe a modal
-    modalLoading.value = true; // Inicia o carregamento
+    showModal.value = true;
+    modalLoading.value = true;
     team1Name.value = team1;
     team2Name.value = team2;
 
     try {
-        const response = await axios.get(`/api/championship/clashes/${props.championshipId}`, {
-            championship_id: parseInt(props.championshipId, 10), // Conferindo que seja inteiro
-            team1_id: parseInt(team1Id, 10), // IDs transformados em inteiros
-            team2_id: parseInt(team2Id, 10), // IDs transformados em inteiros
+        const response = await axios.post(`/api/championship/clashes`, {
+            championship_id: parseInt(props.championshipId, 10),
+            team1_id: parseInt(team1Id, 10),
+            team2_id: parseInt(team2Id, 10),
         });
 
         if (response.data.message === "success") {
-            selectedClash.value = response.data.data; // Armazena os confrontos vindos da API
+            selectedClash.value = response.data.data;
         }
     } catch (error) {
         console.error("Erro ao buscar os confrontos: ", error);
     } finally {
-        modalLoading.value = false; // Conclui o carregamento
+        modalLoading.value = false;
     }
 };
 
-// Função utilitária para obter o ID do time a partir do nome
+// Obter ID do Time pelo Nome
 const getTeamIdByName = (teamName) => {
     const index = teams.value.indexOf(teamName);
     return index !== -1 ? index + 1 : null; // IDs iniciam em 1
 };
 
-// Carrega os dados da tabela ao montar o componente
 onMounted(() => {
     fetchTableData();
 });
@@ -85,13 +82,13 @@ onMounted(() => {
             <table class="matrix-table">
                 <thead>
                 <tr>
-                    <th>Times</th>
+                    <td>-</td>
                     <th v-for="team in teams" :key="team">{{ team }}</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr v-for="(results, teamRow) in matrix" :key="teamRow">
-                    <td class="team-name">{{ teamRow }}</td>
+                    <th class="team-name">{{ teamRow }}</th>
                     <td
                         v-for="(score, teamCol) in results"
                         :key="teamCol"
@@ -106,41 +103,14 @@ onMounted(() => {
             </table>
         </div>
 
-        <!-- Modal -->
-        <div v-if="showModal" class="modal-overlay">
-            <div class="modal">
-                <div class="modal-header">
-                    <h3>Confrontos: {{ team1Name }} x {{ team2Name }}</h3>
-                    <button @click="showModal = false" class="close-btn">X</button>
-                </div>
-
-                <div class="modal-body">
-                    <div v-if="modalLoading" class="loading">Carregando confrontos...</div>
-
-                    <table v-else class="clash-table">
-                        <thead>
-                        <tr>
-                            <th>Casa</th>
-                            <th>Fora</th>
-                            <th>Placar</th>
-                            <th>Disputado</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr
-                            v-for="match in selectedClash"
-                            :key="`${match.home_team_id}-${match.away_team_id}-${match.is_played}`"
-                        >
-                            <td>{{ match.home_team_id === getTeamIdByName(team1Name) ? team1Name : team2Name }}</td>
-                            <td>{{ match.home_team_id === getTeamIdByName(team1Name) ? team2Name : team1Name }}</td>
-                            <td>{{ match.home_goals }} - {{ match.away_goals }}</td>
-                            <td>{{ match.is_played === 1 ? "Sim" : "Não" }}</td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+        <!-- Modal Component -->
+        <ClashModal
+            :show="showModal"
+            :loading="modalLoading"
+            :title="`${team1Name} x ${team2Name}`"
+            :matches="selectedClash"
+            @close="showModal = false"
+        />
     </div>
 </template>
 

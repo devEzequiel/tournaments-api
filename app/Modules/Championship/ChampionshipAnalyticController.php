@@ -61,7 +61,6 @@ class ChampionshipAnalyticController extends Controller
     {
         try {
             $data = $request->all();
-            dd($data);
             $clashes = $this->service->getHead2Head($data);
 
             return $this->responseOk($clashes);

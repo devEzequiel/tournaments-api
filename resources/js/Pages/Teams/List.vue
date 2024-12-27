@@ -80,15 +80,14 @@ export default {
         Stats,
     },
     props: {
-        team: Object, // Dados do time vindos do backend
+        team: Object,
     },
     data() {
         return {
-            activeTab: "players", // Define a aba padrão como Players
+            activeTab: "players",
         };
     },
     computed: {
-        // Define o componente a ser carregado com base na aba ativa
         activeTabComponent() {
             const tabComponents = {
                 info: "Info",
@@ -98,77 +97,116 @@ export default {
                 stats: "Stats",
             };
 
-            return tabComponents[this.activeTab] || "Info"; // Retorna Info como padrão
+            return tabComponents[this.activeTab] || "Info";
         },
     },
 };
 </script>
 
 <style scoped>
+/* Container Geral */
 .team-container {
-    margin: 2rem;
-    padding: 1rem;
+    margin: 2rem auto;
+    max-width: 1200px; /* Limitar o conteúdo */
+    text-align: center;
 }
 
+/* Títulos */
 .team-title {
-    text-align: center;
-    font-size: 2.5rem;
+    font-size: 3rem;
     font-weight: bold;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.8rem;
+    text-align: center;
 }
 
 .team-subtitle {
-    text-align: center;
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     font-weight: 500;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
 }
 
 /* Tabs */
 .nav-tabs {
     display: flex;
-    gap: 0.5rem;
-    list-style: none;
-    justify-content: center;
+    justify-content: center; /* Centralização das tabs */
+    margin-bottom: 1.5rem;
     border-bottom: 2px solid #ddd;
-    padding-bottom: 0.5rem;
+    gap: 1rem; /* Espaço entre tabs */
 }
 
+/* Estilo das Tabs */
 .nav-item {
     list-style: none;
 }
 
 .nav-link {
-    background: transparent;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 0.5rem 1.5rem;
+    background-color: transparent;
+    border: 2px solid transparent;
     color: #6a1b9a;
-    text-align: center;
     font-size: 1rem;
     font-weight: bold;
+    text-transform: uppercase;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s;
+    transition: all 0.3s ease;
 }
 
 .nav-link:hover {
     background-color: #e2cdf1;
-    color: #5a1484;
+    color: #502c71;
+    border-color: #502c71;
 }
 
 .nav-link.active {
     background-color: #6a1b9a;
-    color: #ffffff;
+    color: white;
     border-color: #6a1b9a;
-    transform: scale(1.1);
+    transform: scale(1.1); /* Destaca aba ativa */
 }
 
-/* Conteúdo das Tabs */
+/* Tab Content */
 .tab-content {
-    padding: 1.5rem;
-    background: #ffffff;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    background: white;
+    border: 2px solid #ddd;
+    border-radius: 14px;
+    box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15); /* Mais destaque */
+    text-align: left;
+}
+
+/* Estilo responsivo */
+@media (min-width: 768px) {
+    .nav-tabs {
+        justify-content: flex-start; /* Tabs ficam alinhadas à esquerda */
+    }
+
+    .nav-link {
+        padding: 0.5rem 1.5rem; /* Mais espaçamento no desktop */
+        font-size: 1.1rem; /* Texto levemente maior */
+    }
+
+    .team-title {
+        font-size: 3.5rem; /* Aumentar título no desktop */
+    }
+
+    .team-subtitle {
+        font-size: 1.8rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .nav-tabs {
+        flex-wrap: wrap; /* Tabs ocupam mais de uma linha no mobile */
+    }
+
+    .nav-link {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.8rem;
+    }
+
+    .tab-content {
+        padding: 1rem;
+    }
 }
 </style>

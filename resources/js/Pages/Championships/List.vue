@@ -74,40 +74,34 @@ export default {
         Rank,
     },
     props: {
-        championship: Object, // Dados do campeonato vindos do backend
+        championship: Object,
     },
     data() {
         return {
-            matches: [], // Lista de partidas do campeonato
-            activeTab: "matches", // Aba ativa por padrão
+            matches: [],
+            activeTab: "matches",
         };
     },
     computed: {
-        // Carrega o componente da aba ativa
         activeTabComponent() {
-            // Mapear abas para os componentes
             const tabComponents = {
                 matches: "Matches",
                 rank: "Rank",
                 table: "Table",
                 info: "Info",
             };
-
-            return tabComponents[this.activeTab] || "Info"; // Padrão: Info
+            return tabComponents[this.activeTab] || "Info";
         },
     },
     methods: {
         async fetchMatches() {
             try {
-                // Evita fazer novas requisições se as partidas já foram carregadas
                 if (this.matches.length > 0) return;
 
-                // Faz a requisição para buscar as partidas
                 const response = await axios.get(
                     `/api/fixtures/${this.championship.id}/unplayed`
                 );
 
-                // Armazena as partidas no estado
                 if (response.data && response.data.data) {
                     this.matches = response.data.data;
                 }
@@ -120,65 +114,106 @@ export default {
 </script>
 
 <style scoped>
+/* Container principal */
 .list-container {
-    margin: 2rem;
-    padding: 1rem;
+    margin: 2rem auto;
+    max-width: 1200px; /* Centralizar o conteúdo e limitar o tamanho */
+    text-align: center;
 }
 
+/* Título */
 .championship-title {
-    text-align: center;
-    font-size: 2rem;
+    font-size: 2.5rem;
     font-weight: bold;
     color: #6a1b9a;
     margin-bottom: 1.5rem;
+    text-align: center;
 }
 
-/* Estilo das abas */
+/* Tabs */
 .nav-tabs {
     display: flex;
-    padding: 0;
-    margin-bottom: 1.5rem;
-    list-style: none;
-    gap: 0.5rem;
     justify-content: center;
+    list-style: none;
+    padding: 0;
+    margin-bottom: 2rem;
+    gap: 1rem;
     border-bottom: 2px solid #ddd;
 }
 
+/* Itens das tabs */
 .nav-item {
     list-style: none;
 }
 
 .nav-link {
-    background: transparent;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 0.5rem 1.5rem;
+    background-color: transparent;
+    border: 2px solid transparent;
     color: #6a1b9a;
-    text-align: center;
+    text-transform: uppercase;
     font-size: 1rem;
     font-weight: bold;
+    text-align: center;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s;
 }
 
 .nav-link:hover {
-    background-color: #e2cdf1; /* Efeito hover */
-    color: #5a1484;
+    background-color: #e2cdf1;
+    color: #502c71;
+    border-color: #502c71;
 }
 
 .nav-link.active {
     background-color: #6a1b9a;
     color: #ffffff;
     border-color: #6a1b9a;
-    transform: scale(1.1); /* Destaque visual na aba ativa */
+    transform: scale(1.1); /* Destaque ao selecionar */
 }
 
 /* Conteúdo das Tabs */
 .tab-content {
-    padding: 1.5rem;
+    padding: 2rem;
     background: #ffffff;
     border: 1px solid #ddd;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 14px;
+    box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15); /* Sombra para destaque */
+}
+
+/* ---------- Responsividade ---------- */
+/* Tela grande */
+@media (min-width: 768px) {
+    .nav-tabs {
+        justify-content: flex-start; /* Alinhar à esquerda no desktop */
+    }
+
+    .nav-link {
+        font-size: 1.1rem;
+        padding: 0.6rem 1.5rem; /* Ajustar tamanho no desktop */
+    }
+
+    .championship-title {
+        font-size: 3rem;
+    }
+}
+
+/* Tela pequena (mobile) */
+@media (max-width: 576px) {
+    .nav-tabs {
+        flex-wrap: wrap; /* Permitir quebra de linha */
+        justify-content: center; /* Centralizar as tabs */
+        gap: 0.5rem; /* Menor espaçamento em telas pequenas */
+    }
+
+    .nav-link {
+        font-size: 0.9rem; /* Fonte menor */
+        padding: 0.4rem 1rem; /* Padding reduzidos */
+    }
+
+    .tab-content {
+        padding: 1rem;
+    }
 }
 </style>

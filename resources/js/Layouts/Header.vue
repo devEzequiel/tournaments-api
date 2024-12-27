@@ -21,9 +21,6 @@
             >
                 <ul class="nav flex-column flex-md-row">
                     <li class="nav-item">
-                        <InertiaLink href="/dashboard" class="nav-link">Dashboard</InertiaLink>
-                    </li>
-                    <li class="nav-item">
                         <InertiaLink href="/championships" class="nav-link">Championships</InertiaLink>
                     </li>
                     <li class="nav-item">

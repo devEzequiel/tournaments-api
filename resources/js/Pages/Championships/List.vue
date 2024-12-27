@@ -50,6 +50,7 @@
                     :is="activeTabComponent"
                     :championship-data="championship"
                     :matches="matches"
+                    :championship-id="championship.id"
                 />
             </div>
         </div>
@@ -78,7 +79,7 @@ export default {
     data() {
         return {
             matches: [], // Lista de partidas do campeonato
-            activeTab: "info", // Aba ativa
+            activeTab: "Matches", // Aba ativa
         };
     },
     computed: {
@@ -86,10 +87,10 @@ export default {
         activeTabComponent() {
             // Mapear abas para os componentes
             const tabComponents = {
-                info: "Info",
                 matches: "Matches",
-                table: "Table",
                 rank: "Rank",
+                table: "Table",
+                info: "Info",
             };
 
             return tabComponents[this.activeTab] || "Info"; // Padrão: Info

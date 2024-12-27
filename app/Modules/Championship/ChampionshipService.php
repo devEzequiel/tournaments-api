@@ -43,6 +43,7 @@ class ChampionshipService extends BaseService implements ChampionshipContract
      */
     public function findByName(string $name)
     {
+        $name = str_replace('-', ' ', $name); // Converte o slug para o formato do campo 'name' no banco de dados
         $championship = $this->model::query()
             ->where('name', $name)
             ->first();

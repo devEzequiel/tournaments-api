@@ -2,7 +2,7 @@
     <DefaultLayout>
         <div class="list-container">
             <!-- Título do Campeonato -->
-            <h1 class="championship-title">{{ championshipData.name }}</h1>
+            <h1 class="championship-title">{{ championship.name }}</h1>
 
             <!-- Tabs -->
             <ul class="nav nav-tabs">
@@ -19,7 +19,7 @@
                     <button
                         class="nav-link"
                         :class="{ active: activeTab === 'matches' }"
-                        @click="activeTab = 'matches'"
+                        @click="activeTab = 'matches'; fetchMatches()"
                     >
                         Matches
                     </button>
@@ -48,7 +48,7 @@
             <div class="tab-content mt-4">
                 <component
                     :is="activeTabComponent"
-                    :championship-data="championshipData"
+                    :championship-data="championship"
                     :matches="matches"
                 />
             </div>
@@ -72,10 +72,12 @@ export default {
         Table,
         Rank,
     },
+    props: {
+        championship: Object, // Dados do campeonato vindos do backend
+    },
     data() {
         return {
-            championshipData: null, // Dados do campeonato
-            matches: [], // Dados dos jogos
+            matches: [], // Lista de partidas do campeonato
             activeTab: "info", // Aba ativa
         };
     },
@@ -90,36 +92,28 @@ export default {
                 rank: "Rank",
             };
 
-            return tabComponents[this.activeTab] || "Info"; // Default: Info
+            return tabComponents[this.activeTab] || "Info"; // Padrão: Info
         },
     },
     methods: {
-        // Carrega os dados do campeonato e jogos
-        async fetchData() {
+        async fetchMatches() {
             try {
-                // Pegar ID do campeonato via rota
-                const championshipId = this.$route.params.id;
+                // Evita fazer novas requisições se as partidas já foram carregadas
+                if (this.matches.length > 0) return;
 
-                // Buscar informações do campeonato
-                const championshipResponse = await axios.get(
-                    `/api/championship/${championshipId}`
+                // Faz a requisição para buscar as partidas
+                const response = await axios.get(
+                    `/api/fixtures/${this.championship.id}/unplayed`
                 );
 
-                this.championshipData = championshipResponse.data.data;
-
-                // Buscar partidas do campeonato
-                const matchesResponse = await axios.get(
-                    `/api/fixtures/${championshipId}/unplayed`
-                );
-
-                this.matches = matchesResponse.data.data;
+                // Armazena as partidas no estado
+                if (response.data && response.data.data) {
+                    this.matches = response.data.data;
+                }
             } catch (error) {
-                console.error("Erro ao carregar dados:", error);
+                console.error("Erro ao carregar partidas:", error);
             }
         },
-    },
-    mounted() {
-        this.fetchData(); // Carregar dados ao montar
     },
 };
 </script>

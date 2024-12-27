@@ -8,4 +8,5 @@ Route::controller(TeamController::class)->group(function () {
         ->only(['store', 'update', 'destroy']);
 
     Route::get('team/{id}/detail', 'detail')->name('team.detail');
+    Route::get('team/', 'list')->name('team.list');
 });

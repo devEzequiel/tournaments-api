@@ -42,7 +42,22 @@ class ChampionshipController extends Controller
         }
     }
 
-    public function show(int $id): JsonResponse
+    public function show(int $id)
+    {
+        try {
+            $championship = $this->service->find($id);
+
+            return inertia('Championships/List', [
+                'championship' => $championship,
+            ]);
+        } catch (Exception $e) {
+            return inertia('Error', [
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function detail(int $id)
     {
         try {
             $championship = $this->service->find($id);

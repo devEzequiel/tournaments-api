@@ -61,7 +61,6 @@ class TeamService extends BaseService implements TeamContract
     public function all()
     {
         $team = $this->model::query()
-            ->with('players')
             ->get();
 
         if (!$team)

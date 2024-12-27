@@ -29,6 +29,17 @@ class TeamController extends Controller
         }
     }
 
+    public function list()
+    {
+        try {
+            $data = $this->service->all();
+
+            return $this->responseOk($data);
+        } catch (Exception $e) {
+            return $this->responseUnprocessableEntity($e->getMessage());
+        }
+    }
+
     public function store(CreateTeamRequest $request): JsonResponse
     {
         try {

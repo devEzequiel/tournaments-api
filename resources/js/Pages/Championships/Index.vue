@@ -34,7 +34,7 @@
                     :playoff_rounds="championship.playoff_rounds"
                     :started_at="championship.started_at"
                     :finished_at="championship.finished_at"
-                    :link="`/championship/${championship.id}`"
+                    :link="`/championship/${championship.name}`"
                 />
             </div>
         </div>

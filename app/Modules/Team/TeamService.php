@@ -3,6 +3,7 @@
 namespace App\Modules\Team;
 
 use App\Contracts\TeamContract;
+use App\Models\Player;
 use App\Models\Team;
 use App\Services\BaseService;
 use Exception;
@@ -16,7 +17,7 @@ class TeamService extends BaseService implements TeamContract
 
     public function create($data): bool
     {
-        return (bool) $this->model::create($data);
+        return (bool)$this->model::create($data);
     }
 
     /**
@@ -61,6 +62,7 @@ class TeamService extends BaseService implements TeamContract
     public function all()
     {
         $team = $this->model::query()
+            ->with('players')
             ->get();
 
         if (!$team)
@@ -74,12 +76,12 @@ class TeamService extends BaseService implements TeamContract
      */
     public function update($data, $id): bool
     {
-        $team = $this->model::find((int) $id);
+        $team = $this->model::find((int)$id);
 
         if (!$team)
             throw new Exception('Time não encontrado');
 
-        return (bool) $team->update($data);
+        return (bool)$team->update($data);
     }
 
     /**
@@ -92,13 +94,59 @@ class TeamService extends BaseService implements TeamContract
         if (!$team)
             throw new Exception('Time não encontrado');
 
-        return (bool) $team->delete();
+        return (bool)$team->delete();
     }
 
     public function findByName(string $name)
     {
-        return $this->model::query()
+        $team = $this->model::query()
             ->where('name', $name)
+            ->with(['players' => function ($query) {
+                $query->select('players.id', 'players.name');
+            }])
+            ->select('id', 'name', 'first_color', 'second_color', 'created_at')
             ->first();
+
+        if (!$team) {
+            return null;
+        }
+
+        $team->players = $this->getPlayerStatsByTeam($team->id);
+
+        return $team;
+    }
+
+    private function getPlayerStatsByTeam(int $teamId)
+    {
+        return Player::query()
+            ->selectRaw('
+            players.id AS player_id,
+            players.name AS player_name,
+            COUNT(DISTINCT player_rates.fixture_id) AS matches_played,
+            IFNULL(
+                (
+                    SELECT COUNT(g.id)
+                    FROM goals g
+                    JOIN fixtures f ON f.id = g.fixture_id
+                    WHERE g.scorer_id = players.id AND f.team_id = ?
+                ), 0
+            ) AS total_goals,
+            IFNULL(
+                (
+                    SELECT COUNT(a.id)
+                    FROM goals a
+                    JOIN fixtures f ON f.id = a.fixture_id
+                    WHERE a.assist_id = players.id AND f.team_id = ?
+                ), 0
+            ) AS total_assists,
+            IFNULL(AVG(player_rates.rate), 0) AS avg_rate
+        ', [$teamId, $teamId])
+            ->join('team_player', 'team_player.player_id', '=', 'players.id') // Relação com a tabela intermediária
+            ->where('team_player.team_id', $teamId) // Filtra os jogadores pelo time específico
+            ->where('team_player.current_team', true) // Considera apenas jogadores do time atual
+            ->leftJoin('player_rates', 'player_rates.player_id', '=', 'players.id')
+            ->leftJoin('fixtures', 'fixtures.id', '=', 'player_rates.fixture_id')
+            ->groupBy('players.id', 'players.name')
+            ->get();
     }
 }

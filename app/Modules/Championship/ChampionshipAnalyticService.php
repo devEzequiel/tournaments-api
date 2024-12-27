@@ -109,7 +109,7 @@ class ChampionshipAnalyticService extends BaseService
             SUM(CASE WHEN home_team_id < away_team_id THEN away_goals ELSE home_goals END) AS team2_goals
         ')
             ->where('championship_id', $championship_id) // Filtra pelo campeonato
-            ->where('is_played', true) // Considera apenas jogos já realizados
+//            ->where('is_played', true) // Considera apenas jogos já realizados
             ->groupBy('team1_id', 'team2_id') // Garante o agrupamento por confrontos entre os mesmos times
             ->get();
 
@@ -286,16 +286,16 @@ class ChampionshipAnalyticService extends BaseService
                 ->get(),
 
             // Melhor Goleiro (maior rate entre goleiros)
-            'golden_glove' => Player::query()
-                ->select('players.id', 'players.name', DB::raw('AVG(player_rates.rate) as avg_rate'))
-                ->join('player_rates', 'player_rates.player_id', '=', 'players.id')
-                ->join('fixtures', 'fixtures.id', '=', 'player_rates.fixture_id')
-                ->where('fixtures.championship_id', $champ_id)
-                ->where('players.gk', true) // Apenas goleiros
-                ->groupBy('players.id', 'players.name')
-                ->orderByDesc('avg_rate') // Ordenação pela média do rate
-                ->limit(3) // Limita ao top 3
-                ->get()
+//            'golden_glove' => Player::query()
+//                ->select('players.id', 'players.name', DB::raw('AVG(player_rates.rate) as avg_rate'))
+//                ->join('player_rates', 'player_rates.player_id', '=', 'players.id')
+//                ->join('fixtures', 'fixtures.id', '=', 'player_rates.fixture_id')
+//                ->where('fixtures.championship_id', $champ_id)
+//                ->where('players.gk', true) // Apenas goleiros
+//                ->groupBy('players.id', 'players.name')
+//                ->orderByDesc('avg_rate') // Ordenação pela média do rate
+//                ->limit(3) // Limita ao top 3
+//                ->get()
         ];
 
         return [

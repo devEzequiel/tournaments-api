@@ -101,6 +101,10 @@ export default {
             type: String,
             required: true,
         },
+        link: {
+            type: String,
+            required: true,
+        }
     },
     data() {
         return {
@@ -110,7 +114,8 @@ export default {
     },
     methods: {
         navigateToTeam() {
-            this.$inertia.visit(`/teams/${this.teamId}`);
+            console.log(this.link);
+            this.$inertia.visit(this.link);
         },
         closeOptionsModal() {
             this.showOptionsModal = false;

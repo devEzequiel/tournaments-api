@@ -58,7 +58,7 @@ class TeamController extends Controller
         try {
             $team = $this->service->findByName($name);
 
-            return inertia('Teams/Index', [
+            return inertia('Teams/List', [
                 'team' => $team,
             ]);
         } catch (Exception $e) {

@@ -23,6 +23,7 @@
                     :name="team.name"
                     :firstColor="team.first_color"
                     :secondColor="team.second_color"
+                    :link="`/teams/${team.name.replace(/\s+/g, '-').toLowerCase()}`"
                 />
             </div>
         </div>
@@ -38,10 +39,10 @@ export default {
     components: {
         DefaultLayout,
         TeamCard,
-        AddTeamModal,
+        AddTeamModal
     },
     props: {
-        teams: Array, // Times enviados do servidor
+        teams: Array
     },
     data() {
         return {

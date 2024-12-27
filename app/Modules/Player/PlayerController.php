@@ -15,7 +15,22 @@ class PlayerController extends Controller
     {
     }
 
-    public function index(): JsonResponse
+    public function index()
+    {
+        try {
+            $data = $this->service->all();
+
+            return inertia('Players/Index', [
+                'players' => $data,
+            ]);
+        } catch (Exception $e) {
+            return inertia('Error', [
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function all(): JsonResponse
     {
         try {
             $data = $this->service->all();

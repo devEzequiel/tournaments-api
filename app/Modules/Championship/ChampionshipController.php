@@ -42,10 +42,10 @@ class ChampionshipController extends Controller
         }
     }
 
-    public function show(int $id)
+    public function show(string $name)
     {
         try {
-            $championship = $this->service->find($id);
+            $championship = $this->service->findByName($name);
 
             return inertia('Championships/List', [
                 'championship' => $championship,

@@ -4,7 +4,8 @@ namespace App\Contracts;
 
 interface ChampionshipContract
 {
-    public function find (int $championship_id);
+    public function find (int $id);
+    public function findByName (string $name);
     public function create (array $data);
     public function all();
     public function getFixtures(int $championshipId);

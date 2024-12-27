@@ -28,14 +28,24 @@ class ChampionshipService extends BaseService implements ChampionshipContract
         return true;
     }
 
-    /**
-     * @throws Exception
-     */
     public function find(int $championship_id)
     {
         $championship = $this->model::query()
             ->where('id', $championship_id)
-            ->get();
+            ->first();
+
+        return $championship;
+
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function findByName(string $name)
+    {
+        $championship = $this->model::query()
+            ->where('name', $name)
+            ->first();
 
         if (!$championship) {
             throw new Exception('Campeonato não encontrado');
@@ -47,7 +57,8 @@ class ChampionshipService extends BaseService implements ChampionshipContract
     /**
      * @throws Exception
      */
-    public function all()
+    public
+    function all()
     {
         $championship = $this->model::query()
             ->get();
@@ -60,7 +71,8 @@ class ChampionshipService extends BaseService implements ChampionshipContract
     /**
      * @throws Exception
      */
-    public function update($data, $championship_id): bool
+    public
+    function update($data, $championship_id): bool
     {
         $championship = $this->model::find((int)$championship_id);
 
@@ -72,7 +84,8 @@ class ChampionshipService extends BaseService implements ChampionshipContract
     /**
      * @throws Exception
      */
-    public function delete(int $championship_id): bool
+    public
+    function delete(int $championship_id): bool
     {
         $championship = $this->model::find($championship_id);
 
@@ -84,7 +97,8 @@ class ChampionshipService extends BaseService implements ChampionshipContract
     /**
      * @throws Exception
      */
-    public function getFixtures(int $championship_id)
+    public
+    function getFixtures(int $championship_id)
     {
         $fixtures = Fixture::query()
             ->where('championship_id', $championship_id)
@@ -98,7 +112,8 @@ class ChampionshipService extends BaseService implements ChampionshipContract
         return $fixtures;
     }
 
-    private static function createFixtures(array $teams, Championship $champ)
+    private
+    static function createFixtures(array $teams, Championship $champ)
     {
         $scheduler = new RoundRobinScheduler();
         $scheduler->setTeams($teams) // Define os times

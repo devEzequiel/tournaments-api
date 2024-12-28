@@ -45,19 +45,14 @@ class TeamService extends BaseService implements TeamContract
      */
     public function getCurrentPlayers(int $id)
     {
-        $team_players = Team::query()
-            ->where('team_id', $id)
-            ->get()->map(fn($team_players) => [
-                'id' => $team_players->id,
-                'name' => $team_players->name,
-                'players' => $team_players->pluck('name')
-            ])->toArray();
+        $teamPlayers = TeamPlayer::query()
+            ->where('team_id', $id) // Relaciona com o time pelo ID
+            ->where('current_team', true) // Apenas jogadores atuais
+            ->join('players', 'team_player.player_id', '=', 'players.id') // Junta com a tabela "players" para obter detalhes dos jogadores
+            ->select('players.id as player_id', 'players.name as player_name') // Seleciona os dados necessários
+            ->get();
 
-        if (!$team_players) {
-            throw new Exception('Nenhum jogador encontrado');
-        }
-
-        return $team_players;
+        return $teamPlayers;
     }
 
     /**
@@ -136,9 +131,6 @@ class TeamService extends BaseService implements TeamContract
 
     private function getTeamStats(int $teamId, ?string $orderBy = null): array
     {
-        // Validar que o time com o $teamId existe
-        $team = Team::findOrFail($teamId);
-
         // Buscar jogadores atuais do time
         $players = DB::table('team_player')
             ->where('team_id', $teamId)

@@ -9,4 +9,5 @@ Route::controller(TeamController::class)->group(function () {
 
     Route::get('team/{id}/detail', 'detail')->name('team.detail');
     Route::get('team/', 'list')->name('team.list');
+    Route::get('team/{id}/current', 'currentPlayers')->name('team.currentPlayers');
 });

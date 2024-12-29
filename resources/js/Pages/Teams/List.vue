@@ -1,9 +1,24 @@
 <template>
     <DefaultLayout>
         <div class="team-container">
+            <!-- Botão Adicionar Jogador -->
+            <div class="add-player-container">
+                <button class="add-player-btn" @click="showAddPlayerModal = true">
+                    Adicionar Jogador
+                </button>
+            </div>
+
             <!-- Título do Time -->
-            <h1 class="team-title" :style="{ color: team.first_color }">{{ team.name }}</h1>
-            <h2 class="team-subtitle" :style="{ color: team.second_color }">Info & Players</h2>
+            <h3
+                class="team-title"
+                :style="{
+        color: team.first_color,
+        WebkitTextStroke: `4px ${team.second_color}`,
+        textStroke: `3px ${team.second_color}`
+    }"
+            >
+                {{ team.name }}
+            </h3>
 
             <!-- Tabs -->
             <ul class="nav nav-tabs">
@@ -51,13 +66,30 @@
                     >
                         Stats
                     </button>
+                    <li class="nav-item">
+                        <button
+                            class="nav-link"
+                            :class="{ active: activeTab === 'squad' }"
+                            @click="activeTab = 'squad'"
+                        >
+                            Squad
+                        </button>
+                    </li>
                 </li>
             </ul>
 
             <!-- Conteúdo das Tabs -->
             <div class="tab-content mt-4">
-                <component :is="activeTabComponent" :team="team" />
+                <component :is="activeTabComponent" :team="team"/>
             </div>
+
+            <!-- Modal Adicionar Jogador -->
+            <AddPlayerModal
+                :teamId="team.id"
+                v-if="showAddPlayerModal"
+                @close="showAddPlayerModal = false"
+                @add-player="handleAddPlayer"
+            />
         </div>
     </DefaultLayout>
 </template>
@@ -68,7 +100,10 @@ import Players from "./Tabs/Players.vue";
 import Championships from "./Tabs/Championships.vue";
 import Matches from "./Tabs/Matches.vue";
 import Stats from "./Tabs/Stats.vue";
+import Squad from "./Tabs/Squad.vue";
 import DefaultLayout from "@/Layouts/DefaultLayout.vue";
+import AddPlayerModal from "@/Components/AddPlayerModal.vue";
+import {router} from '@inertiajs/vue3'
 
 export default {
     components: {
@@ -78,16 +113,20 @@ export default {
         Championships,
         Matches,
         Stats,
+        Squad,
+        AddPlayerModal,
     },
     props: {
-        team: Object,
+        team: Object, // Dados do time vindos do backend
     },
     data() {
         return {
-            activeTab: "players",
+            activeTab: "players", // Define a aba padrão como Players
+            showAddPlayerModal: false, // Exibe ou fecha a modal de adicionar jogador
         };
     },
     computed: {
+        // Define o componente a ser carregado com base na aba ativa
         activeTabComponent() {
             const tabComponents = {
                 info: "Info",
@@ -95,9 +134,18 @@ export default {
                 championships: "Championships",
                 matches: "Matches",
                 stats: "Stats",
+                squad: "Squad"
             };
 
-            return tabComponents[this.activeTab] || "Info";
+            return tabComponents[this.activeTab] || "Info"; // Retorna Info como padrão
+        },
+    },
+    methods: {
+        async handleAddPlayer(playerName) {
+            alert(`O jogador ${playerName} foi adicionado ao time ${this.team.name}!`);
+            this.showAddPlayerModal = false;
+
+            router.reload({only: ['team']});
         },
     },
 };
@@ -106,107 +154,117 @@ export default {
 <style scoped>
 /* Container Geral */
 .team-container {
-    margin: 2rem auto;
-    max-width: 1200px; /* Limitar o conteúdo */
+    margin: 1rem;
+    padding: 1rem;
+}
+
+.team-title {
     text-align: center;
+    margin: 1rem auto; /* Adiciona espaço ao redor do título */
+}
+
+/* Container do botão */
+.add-player-container {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 1rem;
+}
+
+/* Botão Adicionar Jogador */
+.add-player-btn {
+    background-color: #6a1b9a;
+    color: white;
+    font-weight: bold;
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s;
+}
+
+.add-player-btn:hover {
+    background-color: #502c71;
+    transform: scale(1.05);
 }
 
 /* Títulos */
 .team-title {
-    font-size: 3rem;
-    font-weight: bold;
-    margin-bottom: 0.8rem;
     text-align: center;
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
 }
 
 .team-subtitle {
-    font-size: 1.8rem;
+    text-align: center;
+    font-size: 1.5rem;
     font-weight: 500;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
 }
 
-/* Tabs */
 .nav-tabs {
-    display: flex;
-    justify-content: center; /* Centralização das tabs */
-    margin-bottom: 1.5rem;
+    display: flex; /* Garante que as tabs fiquem em uma linha */
+    flex-wrap: nowrap; /* Evita que as tabs passem para outra linha */
+    overflow-x: auto; /* Adiciona scroll horizontal no mobile */
+    list-style: none;
     border-bottom: 2px solid #ddd;
-    gap: 1rem; /* Espaço entre tabs */
+    padding: 0.75rem; /* Espaço ao redor das tabs */
+    gap: 0.5rem; /* Espaçamento entre tabs */
+    margin-bottom: 1rem; /* Espaçamento inferior */
 }
 
 /* Estilo das Tabs */
 .nav-item {
-    list-style: none;
+    flex: 1; /* Tabs ocupam o mesmo espaço/proporcional */
+    text-align: center; /* Alinha o texto das tabs no centro */
+    white-space: nowrap; /* Impede quebra de linha nas tabs */
 }
 
+/* Links das Tabs */
 .nav-link {
-    background-color: transparent;
-    border: 2px solid transparent;
+    display: inline-block; /* Garante que os botões tenham padding uniforme */
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
     color: #6a1b9a;
     font-size: 1rem;
     font-weight: bold;
-    text-transform: uppercase;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
+    text-align: center;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s;
 }
 
 .nav-link:hover {
-    background-color: #e2cdf1;
-    color: #502c71;
-    border-color: #502c71;
+    background-color: #eaddf7;
+    color: #5a1484;
 }
 
 .nav-link.active {
     background-color: #6a1b9a;
     color: white;
     border-color: #6a1b9a;
-    transform: scale(1.1); /* Destaca aba ativa */
+    transform: scale(1.05);
 }
 
-/* Tab Content */
+/* Conteúdo das Tabs */
 .tab-content {
-    padding: 2rem;
-    background: white;
-    border: 2px solid #ddd;
-    border-radius: 14px;
-    box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15); /* Mais destaque */
-    text-align: left;
+    padding: 1rem;
+    background: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Estilo responsivo */
-@media (min-width: 768px) {
-    .nav-tabs {
-        justify-content: flex-start; /* Tabs ficam alinhadas à esquerda */
-    }
-
+@media screen and (max-width: 768px) {
     .nav-link {
-        padding: 0.5rem 1.5rem; /* Mais espaçamento no desktop */
-        font-size: 1.1rem; /* Texto levemente maior */
+        font-size: 0.85rem; /* Diminui a fonte para telas menores */
+        padding: 0.4rem 0.6rem; /* Ajusta o padding */
     }
 
-    .team-title {
-        font-size: 3.5rem; /* Aumentar título no desktop */
-    }
-
-    .team-subtitle {
-        font-size: 1.8rem;
-    }
-}
-
-@media (max-width: 576px) {
     .nav-tabs {
-        flex-wrap: wrap; /* Tabs ocupam mais de uma linha no mobile */
-    }
-
-    .nav-link {
-        font-size: 0.85rem;
-        padding: 0.4rem 0.8rem;
-    }
-
-    .tab-content {
-        padding: 1rem;
+        gap: 0.3rem; /* Reduz o espaçamento entre tabs */
     }
 }
 </style>

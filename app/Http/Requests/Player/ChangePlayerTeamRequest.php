@@ -24,8 +24,8 @@ class ChangePlayerTeamRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'player_id' => ['string', 'required', 'exists:players,id'],
-            'new_team_id' => ['int', 'required', 'exists:teams,id'],
+            'player_id' => ['int', 'required', 'exists:players,id'],
+            'new_team_id' => ['int', 'nullable', 'exists:teams,id'],
         ];
     }
 }

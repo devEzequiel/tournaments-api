@@ -8,6 +8,7 @@ use App\Models\TeamPlayer;
 use App\Services\BaseService;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use function PHPUnit\Framework\isNull;
 
 class PlayerService extends BaseService implements PlayerContract
 {
@@ -142,14 +143,16 @@ class PlayerService extends BaseService implements PlayerContract
             'left_at' => now()
         ]);
 
-        TeamPlayer::create(
-            [
-                'team_id' => $data['new_team_id'],
-                'player_id' => $data['player_id '],
-                'current_team' => true,
-                'joined_at' => now()
-            ]
-        );
+        if (isset($data['new_team_id']) && !isNull($data['new_team_id'])) {
+            TeamPlayer::create(
+                [
+                    'team_id' => $data['new_team_id'],
+                    'player_id' => $data['player_id '],
+                    'current_team' => true,
+                    'joined_at' => now()
+                ]
+            );
+        }
 
         return true;
     }
@@ -163,9 +166,6 @@ class PlayerService extends BaseService implements PlayerContract
     public function delete($id): bool
     {
         $player = $this->model::find($id);
-
-        if (!$player)
-            throw new Exception('Jogador não encontrado');
 
         return (bool) $player->delete();
     }

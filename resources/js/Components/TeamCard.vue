@@ -114,7 +114,6 @@ export default {
     },
     methods: {
         navigateToTeam() {
-            console.log(this.link);
             this.$inertia.visit(this.link);
         },
         closeOptionsModal() {

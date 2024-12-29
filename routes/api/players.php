@@ -4,5 +4,8 @@ use App\Modules\Player\PlayerController;
 use Illuminate\Support\Facades\Route;
 
 Route::controller(PlayerController::class)->group(function () {
-    Route::apiResource('player', PlayerController::class);
+    Route::apiResource('player', PlayerController::class)
+    ->except(['update']);
+
+    Route::put('player/change-team', 'changeTeam')->name('player.change-team');
 });

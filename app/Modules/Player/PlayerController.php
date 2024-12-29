@@ -93,7 +93,6 @@ class PlayerController extends Controller
     {
         try {
             $data = $request->validated();
-
             $this->service->changeTeam($data);
 
             return $this->responseCreated('Time alterado');
@@ -102,14 +101,14 @@ class PlayerController extends Controller
         }
     }
 
-    public function destroy(int $id): JsonResponse
+    public function destroy(int $id)
     {
         try {
             $this->service->delete($id);
 
-            return $this->responseAccepted();
+            return response()->json(['message' => 'success']);
         } catch (Exception $e) {
-            return $this->responseUnprocessableEntity($e->getMessage());
+            return inertia('Error', ['message' => $e->getMessage()]);
         }
     }
 }

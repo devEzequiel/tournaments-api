@@ -24,7 +24,7 @@ class CreateChampionshipRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['string', 'required'],
+            'name' => ['string', 'required', 'unique:championships,name'],
             'description' => ['string', 'nullable'],
             'rounds' => ['numeric', 'required'],
             'playoffs' => ['boolean', 'required'],

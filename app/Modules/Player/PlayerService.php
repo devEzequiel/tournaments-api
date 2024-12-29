@@ -143,11 +143,11 @@ class PlayerService extends BaseService implements PlayerContract
             'left_at' => now()
         ]);
 
-        if (isset($data['new_team_id']) && !isNull($data['new_team_id'])) {
+        if (isset($data['new_team_id'])) {
             TeamPlayer::create(
                 [
                     'team_id' => $data['new_team_id'],
-                    'player_id' => $data['player_id '],
+                    'player_id' => $data['player_id'],
                     'current_team' => true,
                     'joined_at' => now()
                 ]

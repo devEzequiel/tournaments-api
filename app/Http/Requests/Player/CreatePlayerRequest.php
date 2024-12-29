@@ -24,7 +24,7 @@ class CreatePlayerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['string', 'required'],
+            'name' => ['string', 'required', 'unique:players,name'],
             'team_id' => ['int', 'required', 'exists:teams,id'],
         ];
     }

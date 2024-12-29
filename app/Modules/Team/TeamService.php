@@ -120,7 +120,7 @@ class TeamService extends BaseService implements TeamContract
             ->first();
 
         if (empty($players)) {
-            throw new Exception('Nenhum jogador encontrado para o time');
+            return $team;
         }
 
         $team->players = $this->getTeamStats($team->id, 'goals');

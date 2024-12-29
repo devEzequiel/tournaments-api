@@ -121,7 +121,7 @@ export default {
     },
     data() {
         return {
-            activeTab: "players", // Define a aba padrão como Players
+            activeTab: "info", // Define a aba padrão como Players
             showAddPlayerModal: false, // Exibe ou fecha a modal de adicionar jogador
         };
     },

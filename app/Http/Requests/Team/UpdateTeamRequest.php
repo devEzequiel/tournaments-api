@@ -24,7 +24,7 @@ class UpdateTeamRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['string', 'required'],
+            'name' => ['string', 'required', 'unique:teams,name,' . $this->get('team_id')->id],
             'first_color' => ['string', 'required'],
             'second_color' => ['string', 'nullable']
         ];

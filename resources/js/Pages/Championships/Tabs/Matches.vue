@@ -2,29 +2,11 @@
     <div class="matches-container">
         <h2 class="title">Partidas</h2>
 
-        <!-- Rodadas -->
-        <div
-            v-for="round in groupedMatches"
-            :key="round.round"
-            class="round-block"
-        >
+        <div v-for="round in groupedMatches" :key="round.round" class="round-block">
             <h3 class="round-title">Rodada {{ round.round }}</h3>
 
-            <!-- Lista de partidas -->
-            <div
-                v-for="match in round.matches"
-                :key="match.id"
-                class="match-block"
-            >
-                <!-- Informações do Jogo: Rodada e Jogo -->
-                <div class="match-info">
-                    <span class="game-number">
-                        Jogo {{ match.game_number }}
-                    </span>
-                </div>
-
+            <div v-for="match in round.matches" :key="match.id" class="match-block" @click="openPlayMatchModal(match)">
                 <div class="match-row">
-                    <!-- Time da Casa -->
                     <div class="team">
                         <TeamLogo
                             :firstColor="match.home_team_color"
@@ -34,11 +16,7 @@
                             {{ match.home_team_name.slice(0, 3).toUpperCase() }}
                         </span>
                     </div>
-
-                    <!-- VS -->
                     <span class="vs">VS</span>
-
-                    <!-- Time Visitante -->
                     <div class="team">
                         <TeamLogo
                             :firstColor="match.away_team_color"
@@ -51,21 +29,36 @@
                 </div>
             </div>
         </div>
+
+        <!-- Modal -->
+        <PlayMatchModal
+            v-if="selectedMatch"
+            :match="selectedMatch"
+            @close="closePlayMatchModal"
+            @updated="handleMatchUpdated"
+        />
     </div>
 </template>
 
 <script>
 import TeamLogo from "@/Components/TeamLogo.vue";
+import PlayMatchModal from "@/Components/PlayMatchModal.vue";
+import axios from "axios";
 
 export default {
     components: {
         TeamLogo,
+        PlayMatchModal,
     },
     props: {
-        matches: Array, // Lista de partidas
+        matches: Array,
+    },
+    data() {
+        return {
+            selectedMatch: null, // Mantém o estado da partida selecionada
+        };
     },
     computed: {
-        // Grupo de partidas organizadas por rodada
         groupedMatches() {
             const rounds = {};
             this.matches.forEach((match) => {
@@ -79,6 +72,31 @@ export default {
                 round: parseInt(round, 10),
                 matches,
             }));
+        },
+    },
+    methods: {
+        async openPlayMatchModal(match) {
+            this.selectedMatch = match;
+        },
+        async closePlayMatchModal() {
+            this.selectedMatch = null;
+        },
+        async handleMatchUpdated() {
+            try {
+                // Atualiza a partida selecionada para `null` (fecha o modal)
+                this.selectedMatch = null;
+
+                // Tente recarregar o grupo de partidas novamente
+                const response = await axios.get(`/api/fixtures/${this.championship.id}/unplayed`);
+                if (response.data && response.data.data) {
+                    this.matches = response.data.data;
+                }
+
+                alert("Partidas atualizadas!");
+            } catch (error) {
+                console.error("Erro ao recarregar partidas:", error);
+                alert("Erro ao carregar partidas após a atualização.");
+            }
         },
     },
 };
@@ -136,15 +154,16 @@ export default {
 
 /* Partida */
 .match-block {
-    margin-bottom: 10px; /* Mais compacto */
+    margin-bottom: 10px;
+    cursor: pointer;
 }
 
 /* Linha da Partida */
 .match-row {
     display: flex;
-    justify-content: space-between; /* Distribui os elementos uniformemente */
+    justify-content: space-between;
     align-items: center;
-    padding: 10px 20px; /* Espaçamento interno nas laterais */
+    padding: 10px 20px;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     background-color: #f7f7f7;
@@ -219,6 +238,7 @@ export default {
 
     .match-row {
         padding: 8px 14px; /* Redução no padding interno */
+        cursor: pointer;
     }
 }
 </style>

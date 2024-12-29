@@ -77,7 +77,9 @@ class FixtureService extends BaseService implements FixtureContract
             ->select([
                 'fixtures.id',
                 'home_team.name as home_team_name',
+                'home_team.id as home_team_id',
                 'away_team.name as away_team_name',
+                'away_team.id as away_team_id',
                 'home_team.first_color as home_team_color',
                 'home_team.second_color as home_team_second_color',
                 'away_team.first_color as away_team_color',

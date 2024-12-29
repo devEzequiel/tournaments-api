@@ -24,7 +24,7 @@ class UpdateChampionshipRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['string', 'required'],
+            'name' => ['string', 'required', 'unique:championships,name,' . $this->get('championship_id')->id . ',id'],
             'description' => ['string', 'nullable'],
             'rounds' => ['numeric', 'required'],
             'playoffs' => ['boolean', 'required']

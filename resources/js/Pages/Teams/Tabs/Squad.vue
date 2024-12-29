@@ -87,6 +87,8 @@ export default {
                 .catch((errors) => {
                     console.error(errors); // Log errors for debugging (if any)
                 });
+
+            this.fetchCurrentPlayers();
         },
         onPlayerUpdated() {
             this.fetchCurrentPlayers();

@@ -53,7 +53,7 @@ export default {
 
                 this.playerName = "";
             } catch (error) {
-                alert("Ocorreu um erro ao adicionar o jogador. Tente novamente.");
+                alert(error.response.data.message);
             }
         },
     },

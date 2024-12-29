@@ -26,6 +26,7 @@ class CreatePlayerRequest extends FormRequest
         return [
             'name' => ['string', 'required', 'unique:players,name'],
             'team_id' => ['int', 'required', 'exists:teams,id'],
+            'gk' => ['boolean', 'nullable', 'in:0,1']
         ];
     }
 }

@@ -26,6 +26,7 @@ class UpdatePlayerRequest extends FormRequest
         return [
             'name' => ['string', 'required', 'unique:players,name,' . $this->get('player_id'). ',id'],
             'team_id' => ['int', 'required', 'exists:teams,id'],
+            'gk' => ['boolean', 'nullable', 'in:0,1']
         ];
     }
 }

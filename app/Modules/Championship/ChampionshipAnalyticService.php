@@ -299,7 +299,7 @@ class ChampionshipAnalyticService extends BaseService
         ];
 
         return [
-            'players' => $players->take(10),
+            'players' => $players->take(30),
             'awards' => $awards
         ];
     }

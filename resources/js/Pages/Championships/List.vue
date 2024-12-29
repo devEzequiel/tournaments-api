@@ -59,7 +59,8 @@
                     :is="activeTabComponent"
                     :championship-data="championship"
                     :matches="matches"
-                    :championship-id="championship.id"
+                    :championshipId="championship.id"
+                    @update-matches="updateMatches"
                 />
             </div>
         </div>
@@ -108,8 +109,6 @@ export default {
     methods: {
         async fetchMatches() {
             try {
-                if (this.matches.length > 0) return;
-
                 const response = await axios.get(
                     `/api/fixtures/${this.championship.id}/unplayed`
                 );
@@ -121,6 +120,16 @@ export default {
                 console.error("Erro ao carregar partidas:", error);
             }
         },
+        async updateMatches() {
+            // Reutiliza o método fetchMatches para atualizar os dados
+            this.fetchMatches();
+        },
+    },
+    mounted() {
+        // Carregar as partidas automaticamente ao abrir o componente
+        if (this.activeTab === "matches") {
+            this.fetchMatches();
+        }
     },
 };
 </script>

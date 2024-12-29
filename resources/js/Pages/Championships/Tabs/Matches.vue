@@ -51,11 +51,19 @@ export default {
         PlayMatchModal,
     },
     props: {
-        matches: Array,
+        matches: {
+            type: Array,
+            default: () => [], // Garante que "matches" inicie como array vazio
+        },
+        championshipId: {
+            type: Number,
+            required: true, // Exige ID do campeonato
+        },
     },
     data() {
         return {
             selectedMatch: null, // Mantém o estado da partida selecionada
+            localMatches: [...this.matches],
         };
     },
     computed: {
@@ -83,13 +91,10 @@ export default {
         },
         async handleMatchUpdated() {
             try {
-                // Atualiza a partida selecionada para `null` (fecha o modal)
-                this.selectedMatch = null;
-
-                // Tente recarregar o grupo de partidas novamente
-                const response = await axios.get(`/api/fixtures/${this.championship.id}/unplayed`);
+                const response = await axios.get(`/api/fixtures/${this.championshipId}/unplayed`);
                 if (response.data && response.data.data) {
-                    this.matches = response.data.data;
+                    // Notifica o pai para buscar as partidas novamente
+                    this.$emit("update-matches");
                 }
 
                 alert("Partidas atualizadas!");

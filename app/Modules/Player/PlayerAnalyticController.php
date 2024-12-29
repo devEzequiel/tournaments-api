@@ -10,8 +10,13 @@ class PlayerAnalyticController extends Controller
     {
     }
 
-    public function getPlsyr()
+    public function getAnalytics()
     {
-
+        try {
+            $data = $this->service->getPlayersAnalytics();
+            return $this->responseOk($data);
+        } catch (\Exception $e) {
+            return $this->responseUnprocessableEntity($e->getMessage());
+        }
     }
 }

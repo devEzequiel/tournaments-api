@@ -30,6 +30,17 @@ class PlayerController extends Controller
         }
     }
 
+    public function showTabs()
+    {
+        try {
+            return inertia('Players/Index');
+        } catch (Exception $e) {
+            return inertia('Error', [
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
+
     public function all(): JsonResponse
     {
         try {

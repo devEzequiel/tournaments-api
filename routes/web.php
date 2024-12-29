@@ -9,6 +9,7 @@ Route::get('/', function () {
 
 require_once ('web/championships.php');
 require_once ('web/teams.php');
+require_once ('web/players.php');
 
 Route::get('/settings', function () {
     return Inertia::render('Settings'); // Aqui renderizará a página de Settings

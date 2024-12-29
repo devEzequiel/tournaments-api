@@ -9,3 +9,7 @@ Route::controller(PlayerController::class)->group(function () {
 
     Route::put('player/change-team', 'changeTeam')->name('player.change-team');
 });
+
+Route::controller(\App\Modules\Player\PlayerAnalyticController::class)->prefix('players/analytic')->group(function () {
+    Route::get('/', 'getAnalytics');
+});

@@ -30,11 +30,9 @@ class PlayMatchRequest extends FormRequest
             'goals' => ['array', 'nullable'],
             'goals.scorer_id' => ['integer', 'nullable', 'exists:players,id'],
             'goals.assist_id' => ['integer', 'nullable', 'exists:players,id'],
-            'goals.pk' => ['boolean', 'nullable'],
-            'goals.own_goal' => ['boolean', 'nullable'],
             'rates' => ['array', 'nullable'],
             'rates.player_id' => ['integer', 'nullable', 'exists:players,id'],
-            'rates.rate' => ['integer', 'nullable'],
+            'rates.rate' => ['numeric', 'nullable'],
         ];
     }
 

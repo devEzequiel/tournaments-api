@@ -121,7 +121,7 @@ export default {
             }
         },
         async updateMatches() {
-            // Reutiliza o método fetchMatches para atualizar os dados
+            // Reutiliza o metodo fetchMatches para atualizar os dados
             this.fetchMatches();
         },
     },

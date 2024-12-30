@@ -3,6 +3,7 @@
 namespace App\Modules\Fixture;
 
 use App\Contracts\FixtureContract;
+use App\Models\Award;
 use App\Models\Championship;
 use App\Models\Fixture;
 use App\Models\Goal;
@@ -112,7 +113,7 @@ class FixtureService extends BaseService implements FixtureContract
             );
         }
 
-        if (isset($data['goals']) && count($data['goals']) > 0 ) {
+        if (isset($data['goals']) && count($data['goals']) > 0) {
             //apaga todos antes de adicionar
             Goal::query()->where('fixture_id', $fixture->id)->delete();
 
@@ -152,7 +153,67 @@ class FixtureService extends BaseService implements FixtureContract
             $this->processPlayoffs($champ);
         }
 
+        if (!$has_fixtures->count() && !$champ->playoffs) {
+            $has_awards = $champ->whereHas('awards', function ($query) use ($fixture) {
+                $query->where('championship_id', $fixture->championship_id);
+            });
+
+            if (!$has_awards->count()) {
+                $this->saveAwards($fixture);
+            }
+        }
+
         return true;
+    }
+
+    private function saveAwards(Fixture $fixture)
+    {
+        $championshipId = $fixture->championship_id;
+
+        // Melhores notas - Melhor jogador (Best Player)
+        $bestPlayer = PlayerRate::query()
+            ->select('player_id')
+            ->whereHas('fixture', function ($query) use ($championshipId) {
+                $query->where('championship_id', $championshipId);
+            })
+            ->groupBy('player_id')
+            ->selectRaw('AVG(rate) as average_rate, player_id')
+            ->orderByDesc('average_rate')
+            ->first();
+
+        // Artilheiro (Golden Boot)
+        $goldenBoot = Goal::query()
+            ->select('scorer_id')
+            ->whereHas('fixture', function ($query) use ($championshipId) {
+                $query->where('championship_id', $championshipId);
+            })
+            ->whereNotNull('scorer_id')
+            ->groupBy('scorer_id')
+            ->selectRaw('COUNT(scorer_id) as goal_count, scorer_id')
+            ->orderByDesc('goal_count')
+            ->first();
+
+        // Melhor assistente (Playmaker)
+        $playmaker = Goal::query()
+            ->select('assist_id')
+            ->whereHas('fixture', function ($query) use ($championshipId) {
+                $query->where('championship_id', $championshipId);
+            })
+            ->whereNotNull('assist_id')
+            ->groupBy('assist_id')
+            ->selectRaw('COUNT(assist_id) as assist_count, assist_id')
+            ->orderByDesc('assist_count')
+            ->first();
+dd($bestPlayer, $goldenBoot, $playmaker);
+        // Verificar se todos os valores foram encontrados antes de salvar
+        if ($bestPlayer && $goldenBoot && $playmaker) {
+            Award::query()->create([
+                'championship_id' => $championshipId,
+                'best_player' => $bestPlayer->player_id,
+                'golden_boot' => $goldenBoot->scorer_id,
+                'playmaker' => $playmaker->assist_id,
+            ]);
+        }
     }
 
     private function processPlayoffs($championship): void

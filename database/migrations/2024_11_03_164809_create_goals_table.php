@@ -17,9 +17,6 @@ return new class extends Migration {
             $table->unsignedBigInteger('fixture_id')->nullable();
             $table->unsignedBigInteger('scorer_id')->nullable();
             $table->unsignedBigInteger('assist_id')->nullable();
-            $table->boolean('own_goal')->default(false);
-
-            $table->boolean('pk')->default(false);
 
             $table->foreign('fixture_id')->references('id')->on('fixtures')
             ->onDelete('cascade');

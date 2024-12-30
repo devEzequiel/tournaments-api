@@ -24,6 +24,11 @@ class Championship extends BaseModel
         return $this->hasMany(Fixture::class);
     }
 
+    public function awards()
+    {
+        return $this->hasMany(Award::class);
+    }
+
     public function getUnplayedFixtures()
     {
         return $this->fixtures()->where('is_played', false)->get();

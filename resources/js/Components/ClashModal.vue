@@ -35,13 +35,31 @@
     </div>
 </template>
 
-<script setup>
-defineProps({
-    show: Boolean, // Controla a exibição da modal
-    loading: Boolean, // Status de carregamento
-    title: String, // Título dinâmico da modal (Times em confronto)
-    matches: Array, // Dados dos confrontos
-});
+<script>
+import { toRaw } from 'vue';
+export default {
+    props: {
+        show: {
+            type: Boolean,
+            required: true,
+        },
+        loading: {
+            type: Boolean,
+            required: false,
+        },
+        title: {
+            type: String,
+            required: true,
+        },
+        matches: {
+            type: [Array, Object],
+            required: true,
+        },
+    },
+    mounted() {
+        console.log('Props recebidas:', toRaw(this.matches));
+    }
+};
 </script>
 
 <style scoped>
@@ -64,6 +82,7 @@ defineProps({
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    border: 2px solid red; /* Adicione uma borda para depuração */
 }
 
 .modal-header {

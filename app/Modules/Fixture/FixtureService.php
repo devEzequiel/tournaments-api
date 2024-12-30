@@ -11,6 +11,7 @@ use App\Models\PlayerRate;
 use App\Models\Team;
 use App\Services\BaseService;
 use App\Services\Fixture\Exception;
+use Illuminate\Support\Facades\DB;
 
 class FixtureService extends BaseService implements FixtureContract
 {
@@ -144,17 +145,19 @@ class FixtureService extends BaseService implements FixtureContract
             }
         }
 
-        $champ = $this->championship::find($fixture->championship_id);
+        $champ = Championship::find($fixture->championship_id);
 
-        $has_fixtures = $champ->whereHas('fixtures', function ($query) use ($fixture) {
-            $query->where('is_played', false);
-        });
+        $has_fixtures = Fixture::query()
+            ->where('championship_id', $fixture->championship_id)
+            ->where('is_played', false)
+            ->get();
 
         if (!$has_fixtures->count() && $champ->playoffs) {
             $this->processPlayoffs($champ);
         }
-
         if (!$has_fixtures->count() && !$champ->playoffs) {
+            $champ->update(['finished_at' => now()]);
+
             $has_awards = $champ->whereHas('awards', function ($query) use ($fixture) {
                 $query->where('championship_id', $fixture->championship_id);
             });
@@ -171,44 +174,38 @@ class FixtureService extends BaseService implements FixtureContract
     {
         $championshipId = $fixture->championship_id;
 
-        // Melhores notas - Melhor jogador (Best Player)
-        $bestPlayer = PlayerRate::query()
-            ->select('player_id')
-            ->whereHas('awards', function ($query) use ($championshipId) {
-                $query->where('championship_id', $championshipId);
-            })
-            ->groupBy('player_id')
-            ->selectRaw('AVG(rate) as average_rate, player_id')
+        // Melhor jogador (Best Player): jogador com a melhor média de notas
+        $bestPlayer = DB::table('player_rates')
+            ->join('fixtures', 'player_rates.fixture_id', '=', 'fixtures.id')
+            ->where('fixtures.championship_id', $championshipId)
+            ->select('player_rates.player_id', DB::raw('AVG(player_rates.rate) as average_rate'))
+            ->groupBy('player_rates.player_id')
             ->orderByDesc('average_rate')
             ->first();
 
-        // Artilheiro (Golden Boot)
-        $goldenBoot = Goal::query()
-            ->select('scorer_id')
-            ->whereHas('fixture', function ($query) use ($championshipId) {
-                $query->where('championship_id', $championshipId);
-            })
-            ->whereNotNull('scorer_id')
-            ->groupBy('scorer_id')
-            ->selectRaw('COUNT(scorer_id) as goal_count, scorer_id')
+        // Artilheiro (Golden Boot): jogador com mais gols
+        $goldenBoot = DB::table('goals')
+            ->join('fixtures', 'goals.fixture_id', '=', 'fixtures.id')
+            ->where('fixtures.championship_id', $championshipId)
+            ->whereNotNull('goals.scorer_id')
+            ->select('goals.scorer_id', DB::raw('COUNT(goals.scorer_id) as goal_count'))
+            ->groupBy('goals.scorer_id')
             ->orderByDesc('goal_count')
             ->first();
 
-        // Melhor assistente (Playmaker)
-        $playmaker = Goal::query()
-            ->select('assist_id')
-            ->whereHas('fixture', function ($query) use ($championshipId) {
-                $query->where('championship_id', $championshipId);
-            })
-            ->whereNotNull('assist_id')
-            ->groupBy('assist_id')
-            ->selectRaw('COUNT(assist_id) as assist_count, assist_id')
+        // Melhor assistente (Playmaker): jogador com mais assistências
+        $playmaker = DB::table('goals')
+            ->join('fixtures', 'goals.fixture_id', '=', 'fixtures.id')
+            ->where('fixtures.championship_id', $championshipId)
+            ->whereNotNull('goals.assist_id')
+            ->select('goals.assist_id', DB::raw('COUNT(goals.assist_id) as assist_count'))
+            ->groupBy('goals.assist_id')
             ->orderByDesc('assist_count')
             ->first();
-dd($bestPlayer, $goldenBoot, $playmaker);
-        // Verificar se todos os valores foram encontrados antes de salvar
+
+        // Verificar se todos os valores foram encontrados antes de salvar no banco de dados
         if ($bestPlayer && $goldenBoot && $playmaker) {
-            Award::query()->create([
+            DB::table('awards')->insert([
                 'championship_id' => $championshipId,
                 'best_player' => $bestPlayer->player_id,
                 'golden_boot' => $goldenBoot->scorer_id,

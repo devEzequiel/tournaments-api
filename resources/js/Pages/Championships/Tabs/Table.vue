@@ -1,73 +1,93 @@
-<script setup>
-import { ref, onMounted } from "vue";
+<script>
 import axios from "axios";
-import ClashModal from "@/Components/ClashModal.vue";
+import ClashModal from "../../../Components/ClashModal.vue";
 
-const props = defineProps({
-    championshipId: {
-        type: Number,
-        required: true,
+export default {
+    components: {ClashModal},
+    props: {
+        championshipId: {
+            type: Number,
+            required: true,
+        },
     },
-});
 
-// Estados
-const teams = ref([]);
-const matrix = ref({});
-const loading = ref(true);
+    data() {
+        return {
+            teams: {}, // Armazena o objeto de times direto { id: "nome" }
+            teamOrder: [], // Armazena a ordem dos nomes dos times
+            matrix: {}, // Matriz dos confrontos
+            loading: true, // Indicador de carregamento
 
-// Estados para a Modal
-const showModal = ref(false);
-const selectedClash = ref([]);
-const modalLoading = ref(false);
-const team1Name = ref("");
-const team2Name = ref("");
+            // Modal States
+            showModal: false,
+            selectedClash: [],
+            modalLoading: false,
+            team1Name: "",
+            team2Name: "",
+        };
+    },
 
-// Função para buscar dados
-const fetchTableData = async () => {
-    try {
-        const response = await axios.get(`/api/championship/table-data/${props.championshipId}`);
-        if (response.data.message === "success") {
-            teams.value = Object.values(response.data.data.teams);
-            matrix.value = response.data.data.matrix;
-            loading.value = false;
+    methods: {
+        async fetchTableData() {
+            try {
+                const response = await axios.get(`/api/championship/table-data/${this.championshipId}`);
+                if (response.data.message === "success") {
+                    // Atualiza os estados:
+                    this.teams = response.data.data.teams;
+                    this.teamOrder = Object.values(this.teams); // Mantém a ordem dos times
+                    this.matrix = response.data.data.matrix;
+                    this.loading = false;
+                }
+            } catch (error) {
+                console.error("Erro ao buscar os dados da tabela cruzada:", error);
+            }
+        },
+
+        async fetchClashData(team1Id, team2Id, team1, team2) {
+            console.log('Abertura da Modal:', {team1Id, team2Id, team1, team2});
+            this.showModal = true; // Ativar exibição da modal
+            this.modalLoading = true;
+
+            this.team1Name = team1;
+            this.team2Name = team2;
+
+            try {
+                const response = await axios.post(`/api/championship/clashes`, {
+                    championship_id: parseInt(this.championshipId, 10),
+                    team1_id: parseInt(team1Id, 10),
+                    team2_id: parseInt(team2Id, 10),
+                });
+
+                if (response.data.message === "success") {
+                    let clashes = response.data.data;
+
+                    // Se for um array, encapsule como objeto com a estrutura necessária
+                    if (Array.isArray(clashes)) {
+                        clashes = {results: clashes}; // Adiciona uma chave `results` dentro de `data`
+                    }
+
+                    this.selectedClash = clashes; // Atualiza o estado da modal
+                } else {
+                    console.error("Nenhum confronto encontrado ou erro nos dados.");
+                }
+            } catch (error) {
+                console.error("Erro ao buscar os confrontos:", error);
+            } finally {
+                this.modalLoading = false;
+            }
+        },
+
+        getTeamIdByName(teamName) {
+            // Garante correspondência exata no objeto `teams`
+            const id = Object.entries(this.teams).find(([key, value]) => value.trim() === teamName.trim());
+            return id ? parseInt(id[0], 10) : null; // Retorna a chave (ID) como número
         }
-    } catch (error) {
-        console.error("Erro ao buscar os dados da tabela cruzada: ", error);
-    }
+    },
+
+    mounted() {
+        this.fetchTableData();
+    },
 };
-
-const fetchClashData = async (team1Id, team2Id, team1, team2) => {
-    showModal.value = true;
-    modalLoading.value = true;
-    team1Name.value = team1;
-    team2Name.value = team2;
-
-    try {
-        const response = await axios.post(`/api/championship/clashes`, {
-            championship_id: parseInt(props.championshipId, 10),
-            team1_id: parseInt(team1Id, 10),
-            team2_id: parseInt(team2Id, 10),
-        });
-
-        if (response.data.message === "success") {
-            selectedClash.value = response.data.data;
-        }
-    } catch (error) {
-        console.error("Erro ao buscar os confrontos: ", error);
-    } finally {
-        modalLoading.value = false;
-    }
-};
-
-// Obter ID do Time pelo Nome
-const getTeamIdByName = (teamName) => {
-    const index = teams.value.indexOf(teamName);
-    return index !== -1 ? index + 1 : null; // IDs iniciam em 1
-};
-
-onMounted(() => {
-    fetchTableData();
-});
 </script>
 
 <template>
@@ -83,24 +103,32 @@ onMounted(() => {
                 <thead>
                 <tr>
                     <td>-</td>
-                    <th v-for="team in teams" :key="team">
+                    <!-- Cabeçalhos dos times seguem a ordem da `teamOrder` -->
+                    <th v-for="team in teamOrder" :key="team">
                         {{ team.substring(0, 3).toUpperCase() }}
                     </th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr v-for="(results, teamRow) in matrix" :key="teamRow">
+                <!-- Linhas seguem a ordem da `teamOrder` -->
+                <tr v-for="teamRow in teamOrder" :key="teamRow">
                     <th class="team-name">
                         {{ teamRow.substring(0, 3).toUpperCase() }}
                     </th>
                     <td
-                        v-for="(score, teamCol) in results"
+                        v-for="teamCol in teamOrder"
                         :key="teamCol"
-                        :class="{ self: teamRow === teamCol, empty: score === null }"
-                        @click="score !== null && fetchClashData(getTeamIdByName(teamRow), getTeamIdByName(teamCol), teamRow, teamCol)"
+                        :class="{ self: teamRow === teamCol, empty: matrix[teamRow]?.[teamCol] === null }"
+                        @click="() => {
+                            const team1Id = getTeamIdByName(teamRow);
+                            const team2Id = getTeamIdByName(teamCol);
+                            if (matrix[teamRow]?.[teamCol] !== null && team1Id && team2Id) {
+                                fetchClashData(team1Id, team2Id, teamRow, teamCol);
+                            }
+                        }"
                         style="cursor: pointer"
                     >
-                        {{ score === null ? "-" : score }}
+                        {{ matrix[teamRow]?.[teamCol] === null ? "-" : matrix[teamRow]?.[teamCol] }}
                     </td>
                 </tr>
                 </tbody>
@@ -109,6 +137,7 @@ onMounted(() => {
 
         <!-- Modal Component -->
         <ClashModal
+            v-if="showModal"
             :show="showModal"
             :loading="modalLoading"
             :title="`${team1Name} x ${team2Name}`"

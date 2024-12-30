@@ -170,9 +170,8 @@ class ChampionshipAnalyticService extends BaseService
 
         // Buscar os confrontos entre os dois times no campeonato
         $clashes = Fixture::query()
-            ->where('championship_id', $championship_id) // Limitar ao campeonato especificado
+            ->where('championship_id', $championship_id)
             ->where(function ($query) use ($team1_id, $team2_id) {
-                // Verifica se os times estavam em confronto (independentemente de mandante/visitante)
                 $query->where(function ($q) use ($team1_id, $team2_id) {
                     $q->where('home_team_id', $team1_id)
                         ->where('away_team_id', $team2_id);
@@ -181,8 +180,8 @@ class ChampionshipAnalyticService extends BaseService
                         ->where('away_team_id', $team1_id);
                 });
             })
-            ->orderBy('game_number', 'asc') // Organizar por número do jogo
-            ->orderBy('round_number', 'asc') // Organizar por rodada
+            ->orderBy('game_number', 'asc')
+            ->orderBy('round_number', 'asc')
             ->select(
                 'home_team_id',
                 'away_team_id',
@@ -192,21 +191,18 @@ class ChampionshipAnalyticService extends BaseService
             )
             ->get();
 
-        // Reorganizar os resultados para garantir que o team1 seja sempre o time da casa
+        // Reorganizar os resultados para garantir que team1 seja sempre o time da casa
         $clashes->transform(function ($clash) use ($team1_id, $team2_id) {
-            // Ajustar para que team1 seja sempre 'home_team' e team2 seja 'away_team'
             if ($clash->home_team_id !== $team1_id) {
-                // Inverte os campos de time e placar
                 $clash->home_team_id = $team1_id;
                 $clash->away_team_id = $team2_id;
 
-                // Também inverte os gols casa e visitante
                 $temp_home_goals = $clash->home_goals;
                 $clash->home_goals = $clash->away_goals;
                 $clash->away_goals = $temp_home_goals;
             }
 
-            // Preencher gols como 0-0 caso o jogo não tenha sido realizado
+            // Preencher gols como 0-0 caso o jogo ainda não tenha sido realizado
             if (!$clash->is_played) {
                 $clash->home_goals = 0;
                 $clash->away_goals = 0;
@@ -216,6 +212,7 @@ class ChampionshipAnalyticService extends BaseService
         });
 
         return $clashes;
+
     }
 
     public function getPlayersStats(int $champ_id)

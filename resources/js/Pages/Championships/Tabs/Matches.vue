@@ -96,8 +96,6 @@ export default {
                     // Notifica o pai para buscar as partidas novamente
                     this.$emit("update-matches");
                 }
-
-                alert("Partidas atualizadas!");
             } catch (error) {
                 console.error("Erro ao recarregar partidas:", error);
                 alert("Erro ao carregar partidas após a atualização.");

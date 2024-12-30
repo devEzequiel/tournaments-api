@@ -51,6 +51,15 @@
                         Stats
                     </button>
                 </li>
+                <li class="nav-item">
+                    <button
+                        class="nav-link"
+                        :class="{ active: activeTab === 'results' }"
+                        @click="activeTab = 'results'"
+                    >
+                        Results
+                    </button>
+                </li>
             </ul>
 
             <!-- Conteúdo das Tabs -->
@@ -75,6 +84,7 @@ import Matches from "./Tabs/Matches.vue";
 import Table from "./Tabs/Table.vue";
 import Rank from "./Tabs/Rank.vue";
 import Stats from "./Tabs/Stats.vue";
+import Results from "./Tabs/Results.vue";
 
 export default {
     components: {
@@ -83,7 +93,8 @@ export default {
         Matches,
         Table,
         Rank,
-        Stats
+        Stats,
+        Results,
     },
     props: {
         championship: Object,
@@ -102,6 +113,7 @@ export default {
                 table: "Table",
                 info: "Info",
                 stats: "Stats",
+                results: "Results",
             };
             return tabComponents[this.activeTab] || "Info";
         },

@@ -284,18 +284,6 @@ class ChampionshipAnalyticService extends BaseService
                 ->orderByDesc('total_assists') // Ordenação pelo número de assistências
                 ->limit(3) // Limita ao top 3
                 ->get(),
-
-            // Melhor Goleiro (maior rate entre goleiros)
-//            'golden_glove' => Player::query()
-//                ->select('players.id', 'players.name', DB::raw('AVG(player_rates.rate) as avg_rate'))
-//                ->join('player_rates', 'player_rates.player_id', '=', 'players.id')
-//                ->join('fixtures', 'fixtures.id', '=', 'player_rates.fixture_id')
-//                ->where('fixtures.championship_id', $champ_id)
-//                ->where('players.gk', true) // Apenas goleiros
-//                ->groupBy('players.id', 'players.name')
-//                ->orderByDesc('avg_rate') // Ordenação pela média do rate
-//                ->limit(3) // Limita ao top 3
-//                ->get()
         ];
 
         return [

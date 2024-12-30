@@ -62,7 +62,7 @@ export default {
         };
     },
     methods: {
-        showToast(message) {
+        async showToast(message) {
             this.toastMessage = message;
 
             // Remove o toast após 3 segundos
@@ -70,7 +70,7 @@ export default {
                 this.toastMessage = '';
             }, 3000);
         },
-        reloadPage() {
+        async reloadPage() {
             this.$inertia.reload(); // Recarrega a página usando Inertia
         },
     },

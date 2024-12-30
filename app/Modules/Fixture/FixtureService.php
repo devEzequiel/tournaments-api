@@ -56,12 +56,15 @@ class FixtureService extends BaseService implements FixtureContract
                 'fixtures.id',
                 'home_team.name as home_team_name',
                 'away_team.name as away_team_name',
-                'home_team.first_color as home_team_color',
+                'home_team.first_color as home_team_first_color',
                 'home_team.second_color as home_team_second_color',
-                'away_team.first_color as away_team_color',
+                'away_team.first_color as away_team_first_color',
                 'away_team.second_color as away_team_second_color',
                 'fixtures.round_number',
                 'fixtures.game_number',
+                'fixtures.home_goals',
+                'fixtures.away_goals',
+                'fixtures.played_at',
             ])
             ->orderBy('fixtures.round_number', 'ASC')
             ->orderBy('fixtures.game_number', 'ASC')
@@ -121,10 +124,8 @@ class FixtureService extends BaseService implements FixtureContract
                 Goal::query()
                     ->create([
                         'fixture_id' => $fixture->id,
-                        'scorer_id' => $goal['scorer_id'],
-                        'assist_id' => $goal['assist_id'] ?? null,
-                        'pk' => $goal['pk'] ?? false,
-                        'own_goal' => $goal['own_goal'] ?? false,
+                        'scorer_id' => $goal['scorer_id'] ?? null,
+                        'assist_id' => $goal['assist_id'] ?? null
                     ]);
             }
         }
@@ -173,7 +174,7 @@ class FixtureService extends BaseService implements FixtureContract
         // Melhores notas - Melhor jogador (Best Player)
         $bestPlayer = PlayerRate::query()
             ->select('player_id')
-            ->whereHas('fixture', function ($query) use ($championshipId) {
+            ->whereHas('awards', function ($query) use ($championshipId) {
                 $query->where('championship_id', $championshipId);
             })
             ->groupBy('player_id')

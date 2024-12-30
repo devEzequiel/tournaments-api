@@ -34,8 +34,7 @@ class PlayerAnalyticService implements PlayerAnalyticContract
             ->leftJoin('teams', 'teams.id', '=', 'team_player.team_id')
             ->leftJoin('player_rates', 'players.id', '=', 'player_rates.player_id')
             ->leftJoin('goals', function ($join) {
-                $join->on('players.id', '=', 'goals.scorer_id')
-                    ->where('goals.own_goal', '=', false);
+                $join->on('players.id', '=', 'goals.scorer_id');
             })
             ->leftJoin('goals as assists', 'players.id', '=', 'assists.assist_id')
             ->leftJoin('awards', function ($join) {

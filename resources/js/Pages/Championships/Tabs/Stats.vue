@@ -28,7 +28,7 @@
             <tr>
                 <th>Jogador</th>
                 <th @click="sortTable('matches_played')" class="sortable-header">
-                    Partidas
+                    P
                     <span v-if="sortField === 'matches_played'">{{ sortOrder === 'asc' ? '🔼' : '🔽' }}</span>
                 </th>
                 <th @click="sortTable('total_goals')" class="sortable-header">
@@ -36,11 +36,11 @@
                     <span v-if="sortField === 'total_goals'">{{ sortOrder === 'asc' ? '🔼' : '🔽' }}</span>
                 </th>
                 <th @click="sortTable('total_assists')" class="sortable-header">
-                    Assistências
+                    Assists
                     <span v-if="sortField === 'total_assists'">{{ sortOrder === 'asc' ? '🔼' : '🔽' }}</span>
                 </th>
                 <th @click="sortTable('avg_rate')" class="sortable-header">
-                    Média de Nota
+                    Média
                     <span v-if="sortField === 'avg_rate'">{{ sortOrder === 'asc' ? '🔼' : '🔽' }}</span>
                 </th>
             </tr>

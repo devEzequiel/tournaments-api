@@ -47,7 +47,17 @@
             </thead>
             <tbody>
             <tr v-for="player in sortedPlayers" :key="player.player_id">
-                <td>{{ player.player_name }}</td>
+                <td>
+                    <div class="player-info">
+                        <div
+                            class="team-logo"
+                            :style="{
+                                background: `linear-gradient(45deg, ${player.team_first_color}, ${player.team_second_color})`
+                            }"
+                        ></div>
+                        <span>{{ player.player_name }}</span>
+                    </div>
+                </td>
                 <td>{{ player.matches_played }}</td>
                 <td>{{ player.total_goals }}</td>
                 <td>{{ player.total_assists }}</td>
@@ -60,6 +70,7 @@
 
 <script>
 import axios from "axios";
+import { useToast } from "@/Composables/useToast";
 
 export default {
     props: {
@@ -72,8 +83,9 @@ export default {
         return {
             players: [], // Lista completa de jogadores e estatísticas
             awards: {},  // Top 3 para cada prêmio
-            sortField: null, // Campo pelo qual a tabela está sendo ordenada
-            sortOrder: 'asc', // Ordem atual (ascendente ou descendente)
+            sortField: 'total_goals', // Campo pelo qual a tabela está sendo ordenada
+            sortOrder: 'desc', // Ordem atual (ascendente ou descendente)
+            toast: useToast(),
             awardTitles: {
                 best_player: "The Best",
                 golden_boot: "Golden Boot",
@@ -84,16 +96,23 @@ export default {
     computed: {
         // Computed para ordenar os jogadores na tabela
         sortedPlayers() {
-            if (!this.sortField) return this.players;
+            if (!this.sortField || !this.players || this.players.length === 0) {
+                return this.players || [];
+            }
 
             return [...this.players].sort((a, b) => {
-                const fieldA = a[this.sortField];
-                const fieldB = b[this.sortField];
+                try {
+                    const fieldA = a[this.sortField] ?? 0;
+                    const fieldB = b[this.sortField] ?? 0;
 
-                if (this.sortOrder === 'asc') {
-                    return fieldA < fieldB ? -1 : fieldA > fieldB ? 1 : 0;
-                } else {
-                    return fieldA > fieldB ? -1 : fieldA < fieldB ? 1 : 0;
+                    if (this.sortOrder === 'asc') {
+                        return fieldA < fieldB ? -1 : fieldA > fieldB ? 1 : 0;
+                    } else {
+                        return fieldA > fieldB ? -1 : fieldA < fieldB ? 1 : 0;
+                    }
+                } catch (error) {
+                    console.error('Erro ao ordenar:', error);
+                    return 0;
                 }
             });
         },
@@ -111,7 +130,7 @@ export default {
                 }
             } catch (error) {
                 console.error("Erro ao buscar estatísticas:", error);
-                alert("Erro ao carregar estatísticas do campeonato.");
+                this.toast.error("Erro ao carregar estatísticas do campeonato.");
             }
         },
         sortTable(field) {
@@ -145,6 +164,18 @@ export default {
     border-radius: 10px;
     max-width: 1000px;
     margin: 0 auto;
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .stats-title {
@@ -237,6 +268,10 @@ export default {
     border-bottom: 1px solid #ddd;
 }
 
+.stats-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
 .stats-table tbody tr:hover {
     background-color: #f2f2f2;
 }
@@ -249,6 +284,20 @@ export default {
 
 .stats-table tbody td:first-child {
     font-weight: bold;
+}
+
+/* Player Info */
+.player-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.team-logo {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    flex-shrink: 0;
 }
 
 /* Responsividade */

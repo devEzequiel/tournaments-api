@@ -210,8 +210,7 @@ class PlayerService extends BaseService implements PlayerContract
                     });
             })
             ->groupBy('players.id', 'players.name')
-            ->first();mm
-
+            ->first();
 
         if (!$playerStats) {
             return [];

@@ -4,23 +4,28 @@
         <Header />
 
         <!-- Conteúdo principal -->
-        <main class="flex-grow-1 container my-5">
+        <main class="flex-grow-1 container main-content">
             <slot />
         </main>
 
         <!-- Footer -->
         <Footer />
+
+        <!-- Toast Notifications -->
+        <ToastNotification ref="toast" />
     </div>
 </template>
 
 <script>
 import Header from './Header.vue';
 import Footer from './Footer.vue';
+import ToastNotification from '@/Components/ToastNotification.vue';
 
 export default {
     components: {
         Header,
         Footer,
+        ToastNotification,
     },
 };
 </script>
@@ -38,5 +43,15 @@ main {
     display: flex;
     flex-direction: column;
     justify-content: center;
+}
+
+.main-content {
+    padding: 3rem 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        padding: 2rem 1rem;
+    }
 }
 </style>

@@ -1,10 +1,8 @@
 <template>
     <DefaultLayout>
         <div class="list-container">
-            <!-- Título do Campeonato -->
             <h1 class="championship-title">{{ championship.name }}</h1>
 
-            <!-- Tabs -->
             <ul class="nav nav-tabs">
                 <li class="nav-item">
                     <button
@@ -62,15 +60,17 @@
                 </li>
             </ul>
 
-            <!-- Conteúdo das Tabs -->
             <div class="tab-content mt-4">
-                <component
-                    :is="activeTabComponent"
-                    :championship-data="championship"
-                    :matches="matches"
-                    :championshipId="championship.id"
-                    @update-matches="updateMatches"
-                />
+                <Transition name="fade" mode="out-in">
+                    <component
+                        :is="activeTabComponent"
+                        :key="activeTab"
+                        :championship-data="championship"
+                        :matches="matches"
+                        :championshipId="championship.id"
+                        @update-matches="updateMatches"
+                    />
+                </Transition>
             </div>
         </div>
     </DefaultLayout>
@@ -102,8 +102,13 @@ export default {
     data() {
         return {
             matches: [],
-            activeTab: "matches",
+            activeTab: localStorage.getItem('championshipActiveTab') || "matches",
         };
+    },
+    watch: {
+        activeTab(newTab) {
+            localStorage.setItem('championshipActiveTab', newTab);
+        }
     },
     computed: {
         activeTabComponent() {
@@ -147,84 +152,105 @@ export default {
 </script>
 
 <style scoped>
-/* Container principal */
 .list-container {
     margin: 2rem auto;
-    max-width: 1200px; /* Centralizar o conteúdo e limitar o tamanho */
+    max-width: 1200px;
     text-align: center;
 }
 
-/* Título */
 .championship-title {
     font-size: 2.5rem;
     font-weight: bold;
-    color: #6a1b9a;
+    color: var(--color-primary);
     margin-bottom: 1.5rem;
     text-align: center;
 }
 
-/* Tabs */
 .nav-tabs {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     list-style: none;
-    padding: 0;
-    margin-bottom: 2rem;
-    gap: 1rem;
-    border-bottom: 2px solid #ddd;
+    padding: 0.5rem;
+    margin-bottom: 1.5rem;
+    gap: 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+    scrollbar-width: none;
 }
 
-/* Itens das tabs */
+.nav-tabs::-webkit-scrollbar {
+    display: none;
+}
+
 .nav-item {
     list-style: none;
 }
 
 .nav-link {
     background-color: transparent;
-    border: 2px solid transparent;
-    color: #6a1b9a;
+    border: 1px solid transparent;
+    color: var(--color-text);
     text-transform: uppercase;
-    font-size: 1rem;
-    font-weight: bold;
+    font-size: 0.95rem;
+    font-weight: 600;
     text-align: center;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
+    padding: 0.5rem 0.95rem;
+    border-radius: 999px;
     cursor: pointer;
-    transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s;
+    white-space: nowrap;
 }
 
 .nav-link:hover {
-    background-color: #e2cdf1;
-    color: #502c71;
-    border-color: #502c71;
+    background-color: rgba(79, 70, 229, 0.08);
+    color: var(--color-primary);
+    border-color: rgba(79, 70, 229, 0.15);
 }
 
 .nav-link.active {
-    background-color: #6a1b9a;
-    color: #ffffff;
-    border-color: #6a1b9a;
-    transform: scale(1.1); /* Destaque ao selecionar */
+    background-color: rgba(79, 70, 229, 0.15);
+    color: var(--color-primary);
+    border-color: rgba(79, 70, 229, 0.2);
+    transform: translateY(-1px);
 }
 
-/* Conteúdo das Tabs */
 .tab-content {
     padding: 2rem;
-    background: #ffffff;
-    border: 1px solid #ddd;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: 14px;
-    box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15); /* Sombra para destaque */
+    box-shadow: 0px 12px 30px rgba(15, 23, 42, 0.08);
+    min-height: 400px;
 }
 
-/* ---------- Responsividade ---------- */
-/* Tela grande */
+.fade-enter-active {
+    transition: all 0.3s ease-out;
+}
+
+.fade-leave-active {
+    transition: all 0.2s ease-in;
+}
+
+.fade-enter-from {
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.fade-leave-to {
+    opacity: 0;
+    transform: translateY(-20px);
+}
+
 @media (min-width: 768px) {
     .nav-tabs {
-        justify-content: flex-start; /* Alinhar à esquerda no desktop */
+        justify-content: flex-start;
     }
 
     .nav-link {
         font-size: 1.1rem;
-        padding: 0.6rem 1.5rem; /* Ajustar tamanho no desktop */
+        padding: 0.6rem 1.5rem;
     }
 
     .championship-title {
@@ -232,12 +258,31 @@ export default {
     }
 }
 
-/* Tela pequena (mobile) */
+@media (max-width: 768px) {
+    .list-container {
+        margin: 1rem auto;
+        text-align: left;
+    }
+
+    .championship-title {
+        font-size: 2rem;
+    }
+
+    .nav-link {
+        font-size: 0.85rem;
+        padding: 0.45rem 0.75rem;
+    }
+
+    .tab-content {
+        padding: 1.25rem;
+    }
+}
+
 @media (max-width: 576px) {
     .nav-tabs {
-        flex-wrap: wrap; /* Permitir quebra de linha */
-        justify-content: center; /* Centralizar as tabs */
-        gap: 0.5rem; /* Menor espaçamento em telas pequenas */
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        gap: 0.5rem;
     }
 
     .nav-link {

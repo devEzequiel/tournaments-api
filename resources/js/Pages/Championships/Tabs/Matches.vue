@@ -44,6 +44,7 @@
 import TeamLogo from "@/Components/TeamLogo.vue";
 import PlayMatchModal from "@/Components/PlayMatchModal.vue";
 import axios from "axios";
+import { useToast } from "@/Composables/useToast";
 
 export default {
     components: {
@@ -64,6 +65,7 @@ export default {
         return {
             selectedMatch: null, // Mantém o estado da partida selecionada
             localMatches: [...this.matches],
+            toast: useToast(),
         };
     },
     computed: {
@@ -98,7 +100,7 @@ export default {
                 }
             } catch (error) {
                 console.error("Erro ao recarregar partidas:", error);
-                alert("Erro ao carregar partidas após a atualização.");
+                this.toast.error("Erro ao carregar partidas após a atualização.");
             }
         },
     },
@@ -114,6 +116,18 @@ export default {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     max-width: 700px; /* Diminuir largura da div para PC */
     margin: 0 auto; /* Centralizar o container na tela */
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Título */

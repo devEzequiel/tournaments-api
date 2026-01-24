@@ -14,6 +14,7 @@ class Championship extends BaseModel
         'description',
         'rounds',
         'playoffs',
+        'playoff_type',
         'playoff_rounds',
         'started_at',
         'finished_at',

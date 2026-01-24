@@ -50,9 +50,14 @@ class FixtureController extends Controller
         $request->validated();
         $data = $request->all();
         try {
-            $this->service->playMatch($data);
+            $result = $this->service->playMatch($data);
 
-            return $this->responseOk([], 'Partida jogada com sucesso');
+            $message = 'Partida jogada com sucesso';
+            if (isset($result['final_round_generated']) && $result['final_round_generated']) {
+                $message .= '. Rodada final gerada automaticamente!';
+            }
+
+            return $this->responseOk($result, $message);
         } catch (\Exception $e) {
             return $this->responseUnprocessableEntity($e->getMessage());
         }

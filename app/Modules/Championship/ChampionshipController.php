@@ -102,4 +102,15 @@ class ChampionshipController extends Controller
             return $this->responseUnprocessableEntity($e->getMessage());
         }
     }
+    
+    public function generateFinalRound(int $id): JsonResponse
+    {
+        try {
+            FinalRoundGeneratorService::generateFinalRound($id);
+            
+            return $this->responseCreated('Rodada final gerada com sucesso');
+        } catch (\Exception $e) {
+            return $this->responseUnprocessableEntity($e->getMessage());
+        }
+    }
 }

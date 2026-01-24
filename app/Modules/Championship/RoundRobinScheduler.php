@@ -4,7 +4,7 @@ namespace App\Modules\Championship;
 class RoundRobinScheduler
 {
     private array $teams = [];
-    private int $turns = 1;
+    private int $rounds = 1;
 
     /**
      * Define os times participantes.
@@ -12,12 +12,6 @@ class RoundRobinScheduler
     public function setTeams(array $teams): self
     {
         $this->teams = $teams;
-
-        // O número de equipes deve ser par; caso contrário, adiciona um "bye" (folga).
-        if (count($this->teams) % 2 !== 0) {
-            $this->teams[] = null; // Representa a "bye" (time que fica de folga).
-        }
-
         return $this;
     }
 
@@ -26,74 +20,95 @@ class RoundRobinScheduler
      */
     public function shuffle(): self
     {
-        // Randomiza a ordem dos times
         shuffle($this->teams);
         return $this;
     }
 
     /**
-     * Define o número de turnos (representados diretamente pelos rounds).
+     * Define o número de rodadas.
      */
     public function setRounds(int $rounds): self
     {
-        $this->turns = $rounds; // Cada round será considerado um "turno completo".
+        $this->rounds = $rounds;
         return $this;
     }
 
     /**
-     * Gera os jogos no formato Round Robin com turnos.
+     * Gera os jogos conforme as regras especificadas:
+     * - Cada par de times se enfrenta em todas as rodadas
+     * - Nas rodadas pares, inverte mando de campo
+     * - Na última rodada (se ímpar e rounds > 1), NÃO gera fixtures (será gerado depois baseado em resultados)
      */
     public function build(): array
     {
         $schedule = [];
         $teams = $this->teams;
         $numTeams = count($teams);
-        $numRoundsPerTurn = $numTeams - 1; // Um turno completo tem "N-1 rodadas" para N equipas.
-
-        // Primeiro turno: cria o calendário base
-        $baseSchedule = []; // Para armazenar as partidas do primeiro turno
-        for ($round = 0; $round < $numRoundsPerTurn; $round++) {
-            $matches = [];
-
-            // Cria as partidas ("matches") da rodada.
-            for ($i = 0; $i < $numTeams / 2; $i++) {
-                $home = $teams[$i];
-                $away = $teams[$numTeams - 1 - $i];
-
-                // Se existir "bye", pula a partida.
-                if ($home !== null && $away !== null) {
-                    $matches[] = [$home, $away]; // Primeiro turno: casa e fora padrão
-                }
-            }
-
-            // Adiciona ao calendário base
-            $baseSchedule[$round + 1] = $matches;
-
-            // Rotaciona os times (mantendo o primeiro fixo).
-            $last = array_pop($teams);
-            array_splice($teams, 1, 0, [$last]);
-        }
-
-        // Adiciona os turnos (com alternância)
-        for ($turn = 1; $turn <= $this->turns; $turn++) {
-            foreach ($baseSchedule as $round => $matches) {
-                $adjustedMatches = [];
-                foreach ($matches as $match) {
-                    [$home, $away] = $match;
-
-                    // Alterna casa e fora para turnos pares
-                    if ($turn % 2 === 0) {
-                        $adjustedMatches[] = [$away, $home];
-                    } else {
-                        $adjustedMatches[] = [$home, $away];
-                    }
-                }
-
-                // Adiciona as partidas ao agendamento com o turno correspondente
-                $schedule[($turn - 1) * $numRoundsPerTurn + $round] = $adjustedMatches;
+        
+        // Gera todos os pares de times possíveis
+        $allMatchups = [];
+        for ($i = 0; $i < $numTeams; $i++) {
+            for ($j = $i + 1; $j < $numTeams; $j++) {
+                $allMatchups[] = [$teams[$i], $teams[$j]];
             }
         }
-
+        
+        // Embaralha os confrontos para aleatoriedade
+        shuffle($allMatchups);
+        
+        // Para cada confronto, define aleatoriamente quem começa em casa
+        $matchupHomeFirst = [];
+        foreach ($allMatchups as $matchup) {
+            // 50% de chance de inverter o mando inicial
+            if (rand(0, 1) === 1) {
+                $matchupHomeFirst[] = [$matchup[1], $matchup[0]]; // Time B joga em casa primeiro
+            } else {
+                $matchupHomeFirst[] = $matchup; // Time A joga em casa primeiro
+            }
+        }
+        
+        // Determina quantas rodadas serão geradas agora
+        $roundsToGenerate = $this->rounds;
+        
+        // Se for número ímpar de rodadas E maior que 1, NÃO gera a última rodada
+        if ($this->rounds % 2 === 1 && $this->rounds > 1) {
+            $roundsToGenerate = $this->rounds - 1;
+        }
+        
+        // Gera as rodadas
+        for ($round = 1; $round <= $roundsToGenerate; $round++) {
+            $roundMatches = [];
+            
+            foreach ($matchupHomeFirst as $match) {
+                $teamA = $match[0];
+                $teamB = $match[1];
+                
+                // Alterna mando de campo conforme a rodada
+                if ($round % 2 === 1) {
+                    // Rodada ímpar: mantém ordem original
+                    $roundMatches[] = [$teamA, $teamB];
+                } else {
+                    // Rodada par: inverte mando
+                    $roundMatches[] = [$teamB, $teamA];
+                }
+            }
+            
+            // Embaralha a ordem das partidas dentro da rodada
+            shuffle($roundMatches);
+            
+            $schedule[$round] = $roundMatches;
+        }
+        
         return $schedule;
+    }
+    
+    /**
+     * Gera uma chave única para um confronto entre dois times
+     */
+    private function getMatchupKey($teamA, $teamB): string
+    {
+        $teams = [$teamA, $teamB];
+        sort($teams);
+        return implode('_vs_', $teams);
     }
 }

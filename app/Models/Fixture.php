@@ -21,6 +21,10 @@ class Fixture extends BaseModel
         'away_goals',
         'playoff_round', //1 final, 2 semi, 3 terceiro lugar, 4 quartas
         'is_played', //0 to play, 1 played
+        'is_playoff', // Se é jogo de playoff
+        'playoff_stage', // 'semifinal', 'final'
+        'playoff_game_number', // 1, 2, 3
+        'decided_by_penalty', // Se foi decidido por pênaltis
         'played_at'
     ];
 

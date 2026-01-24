@@ -1,14 +1,8 @@
 <template>
     <DefaultLayout>
-        <!-- Toast -->
-        <div v-if="toastMessage" class="alert alert-success" role="alert">
-            {{ toastMessage }}
-        </div>
-
         <!-- Botão + Modal para adicionar campeonato -->
         <AddModal
             :teams="teams"
-            @toast="showToast"
             @reload="reloadPage"
         />
 
@@ -56,20 +50,7 @@ export default {
         championships: Array,
         teams: Array,
     },
-    data() {
-        return {
-            toastMessage: '',
-        };
-    },
     methods: {
-        async showToast(message) {
-            this.toastMessage = message;
-
-            // Remove o toast após 3 segundos
-            setTimeout(() => {
-                this.toastMessage = '';
-            }, 3000);
-        },
         async reloadPage() {
             this.$inertia.reload(); // Recarrega a página usando Inertia
         },

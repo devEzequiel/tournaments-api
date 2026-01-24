@@ -6,6 +6,7 @@ use App\Modules\Championship\ChampionshipController;
 Route::controller(ChampionshipController::class)->prefix('championship')
     ->group(function () {
         Route::get('{championship_id}/fixtures', 'getFixtures');
+        Route::post('{championship_id}/generate-final-round', 'generateFinalRound');
         Route::apiResource('/', ChampionshipController::class)->only(['store', 'update', 'destroy']);
 
         Route::get('/{championship_id}', 'detail');

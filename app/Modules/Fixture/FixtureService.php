@@ -12,6 +12,8 @@ use App\Models\Team;
 use App\Services\BaseService;
 use App\Services\Fixture\Exception;
 use Illuminate\Support\Facades\DB;
+use App\Modules\Championship\PlayoffGeneratorService;
+use App\Modules\Championship\ChampionshipAnalyticService;
 
 class FixtureService extends BaseService implements FixtureContract
 {
@@ -108,6 +110,7 @@ class FixtureService extends BaseService implements FixtureContract
                 'away_goals' => $data['away_goals'],
                 'is_played' => true,
                 'played_at' => now(),
+                'decided_by_penalty' => $data['decided_by_penalty'] ?? false,
             ]
         );
 
@@ -147,14 +150,37 @@ class FixtureService extends BaseService implements FixtureContract
 
         $champ = Championship::find($fixture->championship_id);
 
+        // Verifica se deve gerar automaticamente a rodada final
+        $finalRoundGenerated = $this->checkAndGenerateFinalRound($champ);
+
+        // Verifica se é um jogo de playoff e se precisa gerar terceiro jogo
+        if ($fixture->is_playoff) {
+            $playoffService = new PlayoffGeneratorService(new ChampionshipAnalyticService());
+            $playoffService->checkAndCreateDecisiveGame($fixture->id);
+        }
+
         $has_fixtures = Fixture::query()
             ->where('championship_id', $fixture->championship_id)
             ->where('is_played', false)
             ->get();
 
-        if (!$has_fixtures->count() && $champ->playoffs) {
-            $this->processPlayoffs($champ);
+        // Se todos os jogos da fase de grupos terminaram e tem playoffs, gerar playoffs
+        if (!$has_fixtures->count() && $champ->playoffs && $champ->playoff_type) {
+            $regularSeasonEnded = !Fixture::where('championship_id', $champ->id)
+                ->where('is_playoff', false)
+                ->where('is_played', false)
+                ->exists();
+            
+            $playoffNotStarted = !Fixture::where('championship_id', $champ->id)
+                ->where('is_playoff', true)
+                ->exists();
+
+            if ($regularSeasonEnded && $playoffNotStarted) {
+                $playoffService = new PlayoffGeneratorService(new ChampionshipAnalyticService());
+                $playoffService->generatePlayoffs($champ->id);
+            }
         }
+        
         if (!$has_fixtures->count() && !$champ->playoffs) {
             $champ->update(['finished_at' => now()]);
 
@@ -167,7 +193,53 @@ class FixtureService extends BaseService implements FixtureContract
             }
         }
 
-        return true;
+        return [
+            'success' => true,
+            'final_round_generated' => $finalRoundGenerated
+        ];
+    }
+
+    /**
+     * Verifica e gera automaticamente a rodada final se necessário
+     * Retorna true se a rodada final foi gerada
+     */
+    private function checkAndGenerateFinalRound(Championship $championship): bool
+    {
+        // Verifica se o campeonato tem número ímpar de rodadas
+        if ($championship->rounds % 2 === 0 || $championship->rounds === 1) {
+            return false;
+        }
+
+        $finalRound = $championship->rounds;
+
+        // Verifica se a rodada final já foi gerada
+        $finalRoundExists = Fixture::where('championship_id', $championship->id)
+            ->where('round_number', $finalRound)
+            ->exists();
+
+        if ($finalRoundExists) {
+            return false;
+        }
+
+        // Verifica se todas as rodadas anteriores foram jogadas
+        $unplayedPreviousMatches = Fixture::where('championship_id', $championship->id)
+            ->where('round_number', '<', $finalRound)
+            ->where('is_played', false)
+            ->count();
+
+        if ($unplayedPreviousMatches === 0) {
+            // Todas as rodadas anteriores foram jogadas - gera a rodada final
+            try {
+                \App\Modules\Championship\FinalRoundGeneratorService::generateFinalRound($championship->id);
+                return true;
+            } catch (\Exception $e) {
+                // Log do erro mas não interrompe o fluxo
+                \Log::warning("Erro ao gerar rodada final automaticamente: " . $e->getMessage());
+                return false;
+            }
+        }
+
+        return false;
     }
 
     private function saveAwards(Fixture $fixture)

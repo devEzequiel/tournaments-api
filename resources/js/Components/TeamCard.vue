@@ -73,7 +73,6 @@
             ref="editTeamModal"
             v-show="editModalVisible"
             :teamId="teamId"
-            @toast="$emit('toast', $event)"
             @reload="$emit('reload')"
         />
     </div>

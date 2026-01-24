@@ -1,15 +1,7 @@
 <template>
     <DefaultLayout>
-        <!-- Toast -->
-        <div v-if="toastMessage" class="alert alert-success" role="alert">
-            {{ toastMessage }}
-        </div>
-
         <!-- Botão + Modal -->
-        <AddTeamModal
-            @toast="showToast"
-            @reload="reloadPage"
-        />
+        <AddTeamModal @reload="reloadPage" />
 
         <!-- Lista de Times -->
         <div class="row g-4">
@@ -44,20 +36,7 @@ export default {
     props: {
         teams: Array
     },
-    data() {
-        return {
-            toastMessage: '',
-        };
-    },
     methods: {
-        showToast(message) {
-            this.toastMessage = message;
-
-            // Remove o toast após 3 segundos
-            setTimeout(() => {
-                this.toastMessage = '';
-            }, 3000);
-        },
         reloadPage() {
             this.$inertia.reload(); // Recarrega os dados usando Inertia
         },

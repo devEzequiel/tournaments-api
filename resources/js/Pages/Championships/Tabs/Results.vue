@@ -105,8 +105,18 @@ export default {
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     max-width: 700px;
-    margin: 0 auto; /* Centraliza o container */
+    margin: 0 auto; /* Centraliza o container */    animation: fadeIn 0.3s ease-in;
 }
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }}
 
 /* Título */
 .title {

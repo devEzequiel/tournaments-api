@@ -9,14 +9,18 @@ export default {
             type: Number,
             required: true,
         },
+        championshipData: {
+            type: Object,
+            default: () => ({})
+        }
     },
 
     data() {
         return {
-            teams: {}, // Armazena o objeto de times direto { id: "nome" }
-            teamOrder: [], // Armazena a ordem dos nomes dos times
-            matrix: {}, // Matriz dos confrontos
-            loading: true, // Indicador de carregamento
+            teams: {},
+            teamOrder: [],
+            matrix: {},
+            loading: true,
 
             // Modal States
             showModal: false,
@@ -25,6 +29,12 @@ export default {
             team1Name: "",
             team2Name: "",
         };
+    },
+
+    computed: {
+        championshipRounds() {
+            return this.championshipData?.rounds || 0;
+        }
     },
 
     methods: {
@@ -140,8 +150,11 @@ export default {
             v-if="showModal"
             :show="showModal"
             :loading="modalLoading"
-            :title="`${team1Name} x ${team2Name}`"
+            :title="`${team1Name} × ${team2Name}`"
             :matches="selectedClash"
+            :championshipRounds="championshipRounds"
+            :team1Name="team1Name"
+            :team2Name="team2Name"
             @close="showModal = false"
         />
     </div>
@@ -153,6 +166,18 @@ export default {
     max-width: 100%;
     margin: 0 auto;
     padding: 10px 15px; /* Reduz o padding para telas menores */
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Header */

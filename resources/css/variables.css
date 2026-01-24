@@ -1,15 +1,182 @@
-/* Variáveis principais - convertidas para valores diretos */
+:root {
+    --color-primary: #4f46e5;
+    --color-secondary: #7c3aed;
+    --color-accent: #38bdf8;
+    --color-bg: #f5f7fb;
+    --color-surface: #ffffff;
+    --color-text: #0f172a;
+    --color-muted: #64748b;
+    --color-border: #e2e8f0;
+}
+
+[data-theme="dark"] {
+    --color-primary: #818cf8;
+    --color-secondary: #a78bfa;
+    --color-accent: #38bdf8;
+    --color-bg: #0f172a;
+    --color-surface: #111827;
+    --color-text: #e2e8f0;
+    --color-muted: #94a3b8;
+    --color-border: #1f2937;
+}
+
+* {
+    box-sizing: border-box;
+}
+
 body {
-    background-color: #f7f7f7;
-    color: #333;
-    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(180deg, #f5f7fb 0%, #eef2ff 100%);
+    color: var(--color-text);
+    font-family: 'Inter', 'Roboto', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.6;
+}
+
+[data-theme="dark"] body {
+    background: linear-gradient(180deg, #0b1220 0%, #0f172a 100%);
+}
+
+img {
+    max-width: 100%;
+    height: auto;
 }
 
 a {
-    color: #6a1b9a;
+    color: var(--color-primary);
     text-decoration: none;
+    transition: color 0.2s ease;
 }
 
 a:hover {
-    text-decoration: underline;
+    color: #4338ca;
+}
+
+.container {
+    max-width: 1200px;
+}
+
+.card,
+.card-body {
+    border-radius: 16px;
+}
+
+.card {
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="dark"] .card {
+    background: var(--color-surface);
+    border-color: var(--color-border);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}
+
+.btn {
+    border-radius: 12px;
+    padding: 0.6rem 1.1rem;
+    font-weight: 600;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn:focus {
+    box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.25);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    border: none;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgba(79, 70, 229, 0.25);
+}
+
+input,
+select,
+textarea {
+    border-radius: 12px !important;
+    border: 1px solid var(--color-border) !important;
+    padding: 0.65rem 0.9rem !important;
+    font-size: 0.95rem !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: rgba(79, 70, 229, 0.5) !important;
+    box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.15) !important;
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+    background-color: #0f172a !important;
+    color: #e2e8f0 !important;
+    border-color: #1f2937 !important;
+}
+
+[data-theme="dark"] .modal-overlay {
+    background: rgba(2, 6, 23, 0.75) !important;
+}
+
+[data-theme="dark"] .modal-container {
+    background: #111827 !important;
+    color: #e2e8f0 !important;
+    border-color: #1f2937 !important;
+}
+
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-footer,
+[data-theme="dark"] .modal-actions {
+    border-color: #1f2937 !important;
+}
+
+[data-theme="dark"] .btn-cancel {
+    background: #1f2937 !important;
+    color: #e2e8f0 !important;
+}
+
+.table {
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--color-surface);
+}
+
+.table thead th {
+    background: #eef2ff;
+    color: var(--color-text);
+    font-weight: 700;
+    border-bottom: 1px solid var(--color-border);
+}
+
+[data-theme="dark"] .table thead th {
+    background: #0b1220;
+}
+
+.table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+[data-theme="dark"] .table tbody tr:hover {
+    background-color: #0f1b2d;
+}
+
+[data-theme="dark"] .tab-content {
+    background: var(--color-surface) !important;
+    border-color: var(--color-border) !important;
+}
+
+[data-theme="dark"] table {
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] th,
+[data-theme="dark"] td {
+    border-color: #1f2937 !important;
+}
+
+.text-muted {
+    color: var(--color-muted) !important;
 }

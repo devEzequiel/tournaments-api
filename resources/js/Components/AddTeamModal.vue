@@ -1,76 +1,92 @@
 <template>
     <div>
         <!-- Botão principal -->
-        <button
-            class="btn btn-primary my-4"
-            @click="showModal = true"
-        >
-            + Adicionar Time
+        <button class="add-team-btn" @click="showModal = true">
+            <span>⚽</span>
+            <span>Novo Time</span>
         </button>
 
         <!-- Modal -->
-        <div
-            v-if="showModal"
-            class="modal-overlay"
-        >
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Adicionar Time</h5>
-                        <!-- Botão "X" para fechar -->
-                        <button
-                            class="btn-close"
-                            @click="closeModal"
-                            aria-label="Close"
-                        >
-                            &times;
+        <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+            <div class="modal-container">
+                <!-- Header -->
+                <div class="modal-header">
+                    <h2>⚽ Adicionar Time</h2>
+                    <button @click="closeModal" class="close-btn" type="button">
+                        <span>×</span>
+                    </button>
+                </div>
+
+                <!-- Form -->
+                <form @submit.prevent="submitForm" class="modal-body">
+                    <!-- Nome do Time -->
+                    <div class="form-group">
+                        <label for="name">
+                            <span class="label-icon">📝</span>
+                            Nome do Time
+                        </label>
+                        <input
+                            type="text"
+                            id="name"
+                            v-model="form.name"
+                            placeholder="Ex: FC Barcelona"
+                            required
+                            class="form-input"
+                        />
+                    </div>
+
+                    <!-- Cores -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstColor">
+                                <span class="label-icon">🎨</span>
+                                Cor Primária
+                            </label>
+                            <input
+                                type="color"
+                                id="firstColor"
+                                v-model="form.first_color"
+                                class="form-color"
+                                required
+                            />
+                            <span class="color-preview" :style="{ background: form.first_color }"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="secondColor">
+                                <span class="label-icon">🎨</span>
+                                Cor Secundária
+                            </label>
+                            <input
+                                type="color"
+                                id="secondColor"
+                                v-model="form.second_color"
+                                class="form-color"
+                                required
+                            />
+                            <span class="color-preview" :style="{ background: form.second_color }"></span>
+                        </div>
+                    </div>
+
+                    <!-- Preview das Cores -->
+                    <div class="color-preview-box">
+                        <div class="preview-label">Preview:</div>
+                        <div class="team-badge" :style="{ background: `linear-gradient(135deg, ${form.first_color} 0%, ${form.second_color} 100%)` }">
+                            {{ form.name || 'Nome' }}
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="modal-actions">
+                        <button type="button" @click="closeModal" class="btn-cancel">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn-save" :disabled="isSubmitting">
+                            <span v-if="!isSubmitting">💾 Salvar</span>
+                            <span v-else>Salvando...</span>
                         </button>
                     </div>
-                    <div class="modal-body">
-                        <form @submit.prevent="submitForm">
-                            <div class="mb-3">
-                                <label for="name" class="form-label">Nome do Time</label>
-                                <input
-                                    type="text"
-                                    id="name"
-                                    class="form-control"
-                                    v-model="form.name"
-                                    required
-                                />
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="firstColor" class="form-label">Cor Primária</label>
-                                <input
-                                    type="color"
-                                    id="firstColor"
-                                    class="form-control form-control-color"
-                                    v-model="form.first_color"
-                                    required
-                                />
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="secondColor" class="form-label">Cor Secundária</label>
-                                <input
-                                    type="color"
-                                    id="secondColor"
-                                    class="form-control form-control-color"
-                                    v-model="form.second_color"
-                                    required
-                                />
-                            </div>
-
-                            <!-- Botão salvar -->
-                            <button
-                                type="submit"
-                                class="btn btn-purple"
-                            >
-                                Salvar
-                            </button>
-                        </form>
-                    </div>
-                </div>
+                </form>
             </div>
         </div>
     </div>
@@ -78,15 +94,18 @@
 
 <script>
 import axios from "axios";
+import { useToast } from "@/Composables/useToast";
 
 export default {
     data() {
         return {
             showModal: false,
+            isSubmitting: false,
+            toast: useToast(),
             form: {
                 name: "",
-                first_color: "#000000",
-                second_color: "#FFFFFF",
+                first_color: "#667eea",
+                second_color: "#764ba2",
             },
         };
     },
@@ -98,19 +117,27 @@ export default {
         resetForm() {
             this.form = {
                 name: "",
-                first_color: "#000000",
-                second_color: "#FFFFFF",
+                first_color: "#667eea",
+                second_color: "#764ba2",
             };
+            this.isSubmitting = false;
         },
         async submitForm() {
+            if (this.isSubmitting) return;
+            
+            this.isSubmitting = true;
+            
             try {
                 await axios.post("/api/team", this.form);
-                this.$emit("toast", "Novo time adicionado com sucesso!");
+                this.toast.success("Time criado com sucesso.");
                 this.closeModal();
                 this.$emit("reload");
             } catch (error) {
                 console.error(error);
-                this.$emit("toast", "Erro ao adicionar o time.");
+                const errorMsg = error.response?.data?.message || "Erro ao criar time";
+                this.toast.error(`${errorMsg}`);
+            } finally {
+                this.isSubmitting = false;
             }
         },
     },
@@ -118,123 +145,279 @@ export default {
 </script>
 
 <style scoped>
-/* Botão principal estilizado */
-.btn-primary {
-    background: linear-gradient(45deg, #6a1b9a, #8e44ad);
-    color: #ffffff;
-    font-weight: bold;
-    font-size: 1rem;
+/* Botão principal */
+.add-team-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 24px;
     border: none;
-    border-radius: 50px;
-    padding: 10px 20px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.06);
-    transition: all 0.3s ease;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
     cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    margin: 24px 0;
 }
 
-.btn-primary:hover {
-    background: linear-gradient(45deg, #8e44ad, #6a1b9a);
-    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+.add-team-btn:hover {
     transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
 }
 
-.btn-primary:focus {
-    outline: none;
-    box-shadow: 0 0 8px rgba(138, 43, 226, 0.5);
+.add-team-btn span:first-child {
+    font-size: 20px;
 }
 
 /* Modal Overlay */
 .modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
     display: flex;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
     z-index: 9999;
+    animation: fadeIn 0.2s ease;
 }
 
-/* Modal Dialog */
-.modal-dialog {
-    background: #ffffff;
-    border-radius: 15px;
-    padding: 2rem;
-    max-width: 500px;
-    width: 100%;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-    animation: fadeIn 0.3s ease;
-}
-
-/* Botão "X" para fechar a modal */
-.btn-close {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: #6a1b9a;
-    cursor: pointer;
-    transition: transform 0.3s ease, color 0.3s ease;
-    font-weight: bold;
-}
-
-.btn-close:hover {
-    color: #8e44ad;
-    transform: scale(1.2);
-}
-
-.btn-close:focus {
-    outline: none;
+/* Modal Container */
+.modal-container {
+    background: white;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 550px;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s ease;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
 /* Modal Header */
 .modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 0.5rem;
-    margin-bottom: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
-/* Modal Title */
-.modal-title {
-    font-size: 1.25rem;
-    font-weight: bold;
-    color: #6a1b9a;
+.modal-header h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
 }
 
-.modal-content {
-    padding: 1rem;
-}
-
-/* Botão "Salvar" estilizado em roxo */
-.btn-purple {
-    background: linear-gradient(45deg, #6a1b9a, #8e44ad);
-    color: #ffffff;
-    font-weight: bold;
+.close-btn {
+    background: rgba(255, 255, 255, 0.2);
     border: none;
-    border-radius: 8px;
-    padding: 10px 20px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
     cursor: pointer;
-    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    color: white;
+    font-size: 24px;
+    padding: 0;
+    line-height: 1;
 }
 
-.btn-purple:hover {
-    background: linear-gradient(45deg, #8e44ad, #6a1b9a);
-    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+.close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+}
+
+/* Modal Body */
+.modal-body {
+    padding: 32px;
+    overflow-y: auto;
+}
+
+/* Form Groups */
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.label-icon {
+    font-size: 18px;
+}
+
+/* Form Input */
+.form-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 15px;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-input::placeholder {
+    color: #a0aec0;
+}
+
+/* Form Row */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+/* Color Input */
+.form-color {
+    width: 60px;
+    height: 60px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.form-color:hover {
+    border-color: #667eea;
+    transform: scale(1.05);
+}
+
+.color-preview {
+    display: inline-block;
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    margin-top: 8px;
+}
+
+/* Color Preview Box */
+.color-preview-box {
+    background: #f7fafc;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.preview-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #718096;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+}
+
+.team-badge {
+    display: inline-block;
+    padding: 12px 32px;
+    border-radius: 12px;
+    color: white;
+    font-weight: 700;
+    font-size: 18px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Modal Actions */
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding-top: 24px;
+    border-top: 2px solid #f7fafc;
+}
+
+.btn-cancel,
+.btn-save {
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.btn-cancel {
+    background: #edf2f7;
+    color: #4a5568;
+}
+
+.btn-cancel:hover {
+    background: #e2e8f0;
+}
+
+.btn-save {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-save:hover:not(:disabled) {
     transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
 }
 
-/* Animação para abrir a modal */
+.btn-save:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Animations */
 @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
     from {
         opacity: 0;
-        transform: scale(0.9);
+        transform: translateY(30px);
     }
     to {
         opacity: 1;
-        transform: scale(1);
+        transform: translateY(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .modal-body {
+        padding: 24px 20px;
+    }
+    
+    .modal-header {
+        padding: 20px;
     }
 }
 </style>

@@ -102,20 +102,29 @@ export default {
     },
     computed: {
         sortedPlayers() {
-            if (!this.currentSort) {
-                return this.players;
+            if (!this.currentSort || !this.players || this.players.length === 0) {
+                return this.players || [];
             }
             return [...this.players].sort((a, b) => {
-                if (this.currentSort === "team_name") {
-                    return this.sortOrder === "asc"
-                        ? a[this.currentSort].localeCompare(b[this.currentSort])
-                        : b[this.currentSort].localeCompare(a[this.currentSort]);
+                try {
+                    if (this.currentSort === "team_name") {
+                        const aVal = a[this.currentSort] || "";
+                        const bVal = b[this.currentSort] || "";
+                        return this.sortOrder === "asc"
+                            ? aVal.localeCompare(bVal)
+                            : bVal.localeCompare(aVal);
+                    }
+                    const aVal = a[this.currentSort] ?? 0;
+                    const bVal = b[this.currentSort] ?? 0;
+                    const sortValue =
+                        this.sortOrder === "asc"
+                            ? aVal - bVal
+                            : bVal - aVal;
+                    return isNaN(sortValue) ? 0 : sortValue;
+                } catch (error) {
+                    console.error("Erro ao ordenar:", error);
+                    return 0;
                 }
-                const sortValue =
-                    this.sortOrder === "asc"
-                        ? a[this.currentSort] - b[this.currentSort]
-                        : b[this.currentSort] - a[this.currentSort];
-                return isNaN(sortValue) ? 0 : sortValue;
             });
         },
     },
@@ -153,6 +162,18 @@ export default {
     border-radius: 8px;
     background: #f9f9f9;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .stats-title {

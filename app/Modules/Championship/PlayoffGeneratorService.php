@@ -66,13 +66,17 @@ class PlayoffGeneratorService
         $third = $standings[2];
         $fourth = $standings[3];
 
-        $this->createPlayoffFixture($championship, $fourth->team_id, $first->team_id, 'semifinal', 1, 1);
+        $this->createPlayoffFixture($championship, $third->team_id, $second->team_id, 'semifinal', 1, 1);
         
-        $this->createPlayoffFixture($championship, $first->team_id, $fourth->team_id, 'semifinal', 2, 1);
+        $this->createPlayoffFixture($championship, $fourth->team_id, $first->team_id, 'semifinal', 2, 1);
 
-        $this->createPlayoffFixture($championship, $third->team_id, $second->team_id, 'semifinal', 1, 2);
+        $this->createPlayoffFixture($championship, $second->team_id, $third->team_id, 'semifinal', 3, 2);
         
-        $this->createPlayoffFixture($championship, $second->team_id, $third->team_id, 'semifinal', 2, 2);
+        $this->createPlayoffFixture($championship, $first->team_id, $fourth->team_id, 'semifinal', 4, 2);
+
+        $this->createPlayoffFixture($championship, null, null, 'final', 1);
+        
+        $this->createPlayoffFixture($championship, null, null, 'final', 2);
     }
 
     /**
@@ -80,8 +84,8 @@ class PlayoffGeneratorService
      */
     private function createPlayoffFixture(
         Championship $championship,
-        int $homeTeamId,
-        int $awayTeamId,
+        ?int $homeTeamId,
+        ?int $awayTeamId,
         string $stage,
         int $gameNumber,
         ?int $seriesNumber = null
@@ -187,7 +191,95 @@ class PlayoffGeneratorService
         }
 
         if ($stage === 'semifinal' && ($team1Wins === 2 || $team2Wins === 2)) {
-            $this->checkAndCreateFinalAfterSemifinals($championship);
+            $winnerId = $team1Wins === 2 ? $team1Id : $team2Id;
+            $this->updateFinalWithWinner($championship, $winnerId);
+        }
+    }
+
+    /**
+     * Atualiza as partidas de final com o vencedor de uma semifinal
+     */
+    private function updateFinalWithWinner(Championship $championship, int $winnerId): void
+    {
+        $semifinalGames = Fixture::where('championship_id', $championship->id)
+            ->where('is_playoff', true)
+            ->where('playoff_stage', 'semifinal')
+            ->where('is_played', true)
+            ->get();
+
+        $series = [];
+        foreach ($semifinalGames as $game) {
+            $key = min($game->home_team_id, $game->away_team_id) . '-' . max($game->home_team_id, $game->away_team_id);
+            if (!isset($series[$key])) {
+                $series[$key] = [
+                    'team1' => min($game->home_team_id, $game->away_team_id),
+                    'team2' => max($game->home_team_id, $game->away_team_id),
+                    'team1_wins' => 0,
+                    'team2_wins' => 0,
+                ];
+            }
+
+            if ($game->home_goals > $game->away_goals) {
+                if ($game->home_team_id == $series[$key]['team1']) {
+                    $series[$key]['team1_wins']++;
+                } else {
+                    $series[$key]['team2_wins']++;
+                }
+            } elseif ($game->home_goals < $game->away_goals) {
+                if ($game->away_team_id == $series[$key]['team1']) {
+                    $series[$key]['team1_wins']++;
+                } else {
+                    $series[$key]['team2_wins']++;
+                }
+            }
+        }
+
+        $winners = [];
+        foreach ($series as $serie) {
+            if ($serie['team1_wins'] >= 2) {
+                $winners[] = $serie['team1'];
+            } elseif ($serie['team2_wins'] >= 2) {
+                $winners[] = $serie['team2'];
+            }
+        }
+
+        $finalGames = Fixture::where('championship_id', $championship->id)
+            ->where('is_playoff', true)
+            ->where('playoff_stage', 'final')
+            ->get();
+
+        if (count($winners) === 1) {
+            $standings = $this->analyticService->getStandings($championship->id);
+            $winnerRank = $standings->search(fn($item) => $item->team_id === $winners[0]);
+            
+            foreach ($finalGames as $finalGame) {
+                if ($finalGame->playoff_game_number === 1 && !$finalGame->home_team_id) {
+                    $finalGame->update(['away_team_id' => $winners[0]]);
+                } elseif ($finalGame->playoff_game_number === 2 && !$finalGame->away_team_id) {
+                    $finalGame->update(['home_team_id' => $winners[0]]);
+                }
+            }
+        } elseif (count($winners) === 2) {
+            $standings = $this->analyticService->getStandings($championship->id);
+            $team1Rank = $standings->search(fn($item) => $item->team_id === $winners[0]);
+            $team2Rank = $standings->search(fn($item) => $item->team_id === $winners[1]);
+
+            $betterTeam = $team1Rank < $team2Rank ? $winners[0] : $winners[1];
+            $worseTeam = $betterTeam === $winners[0] ? $winners[1] : $winners[0];
+
+            foreach ($finalGames as $finalGame) {
+                if ($finalGame->playoff_game_number === 1) {
+                    $finalGame->update([
+                        'home_team_id' => $worseTeam,
+                        'away_team_id' => $betterTeam
+                    ]);
+                } elseif ($finalGame->playoff_game_number === 2) {
+                    $finalGame->update([
+                        'home_team_id' => $betterTeam,
+                        'away_team_id' => $worseTeam
+                    ]);
+                }
+            }
         }
     }
 

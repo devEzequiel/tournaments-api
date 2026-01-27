@@ -26,7 +26,7 @@ class PlayoffGeneratorService
             return;
         }
 
-        $standings = $this->analyticService->getStandings($championshipId);
+        $standings = $this->analyticService->getStanding($championshipId);
 
         if ($championship->playoff_type === 'final') {
             $this->generateFinalPlayoff($championship, $standings);
@@ -47,13 +47,18 @@ class PlayoffGeneratorService
         $first = $standings[0];
         $second = $standings[1];
 
+        // Ida e Volta na Final
         $this->createPlayoffFixture($championship, $second->team_id, $first->team_id, 'final', 1);
-
         $this->createPlayoffFixture($championship, $first->team_id, $second->team_id, 'final', 2);
     }
 
     /**
      * Gera playoff de semifinal (1º vs 4º, 2º vs 3º) + final
+     * Ordem: Alterna entre as duas séries
+     * Jogo 1: 3º vs 2º (ida série 1)
+     * Jogo 2: 4º vs 1º (ida série 2)
+     * Jogo 3: 2º vs 3º (volta série 1)
+     * Jogo 4: 1º vs 4º (volta série 2)
      */
     private function generateSemifinalPlayoff(Championship $championship, $standings): void
     {
@@ -66,17 +71,17 @@ class PlayoffGeneratorService
         $third = $standings[2];
         $fourth = $standings[3];
 
+        // Jogo 1: 3º vs 2º (ida série 1)
         $this->createPlayoffFixture($championship, $third->team_id, $second->team_id, 'semifinal', 1, 1);
         
-        $this->createPlayoffFixture($championship, $fourth->team_id, $first->team_id, 'semifinal', 2, 1);
-
-        $this->createPlayoffFixture($championship, $second->team_id, $third->team_id, 'semifinal', 3, 2);
+        // Jogo 2: 4º vs 1º (ida série 2)
+        $this->createPlayoffFixture($championship, $fourth->team_id, $first->team_id, 'semifinal', 1, 2);
         
-        $this->createPlayoffFixture($championship, $first->team_id, $fourth->team_id, 'semifinal', 4, 2);
-
-        $this->createPlayoffFixture($championship, null, null, 'final', 1);
+        // Jogo 3: 2º vs 3º (volta série 1)
+        $this->createPlayoffFixture($championship, $second->team_id, $third->team_id, 'semifinal', 2, 1);
         
-        $this->createPlayoffFixture($championship, null, null, 'final', 2);
+        // Jogo 4: 1º vs 4º (volta série 2)
+        $this->createPlayoffFixture($championship, $first->team_id, $fourth->team_id, 'semifinal', 2, 2);
     }
 
     /**
@@ -145,8 +150,17 @@ class PlayoffGeneratorService
 
         $team1Wins = 0;
         $team2Wins = 0;
+        $team1AwayGoals = 0;
+        $team2AwayGoals = 0;
 
         foreach ($seriesGames as $game) {
+            // Contabilizar gols fora de casa
+            if ($game->home_team_id == $team1Id) {
+                $team2AwayGoals += $game->away_goals;
+            } else {
+                $team1AwayGoals += $game->away_goals;
+            }
+            
             if ($game->home_goals > $game->away_goals) {
                 if ($game->home_team_id == $team1Id) {
                     $team1Wins++;
@@ -162,7 +176,10 @@ class PlayoffGeneratorService
             }
         }
 
+        // Empate em vitórias (1-1)? Verificar gols fora
         if ($team1Wins === 1 && $team2Wins === 1) {
+            // Se gols fora também estão empatados, criar jogo 3
+            if ($team1AwayGoals === $team2AwayGoals) {
             $alreadyHasGame3 = Fixture::where('championship_id', $championship->id)
                 ->where('is_playoff', true)
                 ->where('playoff_stage', $stage)
@@ -178,37 +195,57 @@ class PlayoffGeneratorService
                 })
                 ->exists();
 
-            if (!$alreadyHasGame3) {
-                $standings = $this->analyticService->getStandings($championship->id);
-                $team1Rank = $standings->search(fn($item) => $item->team_id === $team1Id);
-                $team2Rank = $standings->search(fn($item) => $item->team_id === $team2Id);
+                if (!$alreadyHasGame3) {
+                    $standings = $this->analyticService->getStanding($championship->id);
+                    $team1Rank = $standings->search(fn($item) => $item->team_id === $team1Id);
+                    $team2Rank = $standings->search(fn($item) => $item->team_id === $team2Id);
 
-                $homeTeamId = $team1Rank < $team2Rank ? $team1Id : $team2Id;
-                $awayTeamId = $homeTeamId === $team1Id ? $team2Id : $team1Id;
+                    $homeTeamId = $team1Rank < $team2Rank ? $team1Id : $team2Id;
+                    $awayTeamId = $homeTeamId === $team1Id ? $team2Id : $team1Id;
 
-                $this->createPlayoffFixture($championship, $homeTeamId, $awayTeamId, $stage, 3);
+                    $this->createPlayoffFixture($championship, $homeTeamId, $awayTeamId, $stage, 3);
+                }
             }
+            // Se gols fora diferentes, já há um vencedor (não precisa de jogo 3)
         }
 
-        if ($stage === 'semifinal' && ($team1Wins === 2 || $team2Wins === 2)) {
-            $winnerId = $team1Wins === 2 ? $team1Id : $team2Id;
-            $this->updateFinalWithWinner($championship, $winnerId);
+        // Se alguém venceu a semifinal (2 vitórias), verifica se já pode criar a final
+        if ($stage === 'semifinal') {
+             // For single-elimination or best-of-series where one team is decisive
+             // We trigger updateFinalWithWinner widely
+             $this->updateFinalWithWinner($championship, $team1Id);
         }
     }
 
     /**
-     * Atualiza as partidas de final com o vencedor de uma semifinal
+     * Cria as partidas de final quando ambas as semifinais terminarem
      */
     private function updateFinalWithWinner(Championship $championship, int $winnerId): void
     {
-        $semifinalGames = Fixture::where('championship_id', $championship->id)
+        \Log::info('Verificando criação de final', [
+            'championship_id' => $championship->id,
+            'winner_id' => $winnerId
+        ]);
+
+        // Buscar TODOS os jogos de semifinal (jogados e não jogados)
+        $allSemifinalGames = Fixture::where('championship_id', $championship->id)
             ->where('is_playoff', true)
             ->where('playoff_stage', 'semifinal')
-            ->where('is_played', true)
+            ->orderBy('id', 'asc')
             ->get();
 
+        $semifinalGames = $allSemifinalGames->where('is_played', true);
+
+        \Log::info('Jogos de semifinal', [
+            'total' => $allSemifinalGames->count(),
+            'jogados' => $semifinalGames->count()
+        ]);
+
+        // Agrupa os jogos por série (confronto), mantendo a ordem de criação
         $series = [];
-        foreach ($semifinalGames as $game) {
+        $seriesOrder = []; // Para manter a ordem de criação
+        
+        foreach ($allSemifinalGames as $game) {
             $key = min($game->home_team_id, $game->away_team_id) . '-' . max($game->home_team_id, $game->away_team_id);
             if (!isset($series[$key])) {
                 $series[$key] = [
@@ -216,7 +253,34 @@ class PlayoffGeneratorService
                     'team2' => max($game->home_team_id, $game->away_team_id),
                     'team1_wins' => 0,
                     'team2_wins' => 0,
+                    'team1_goals' => 0,
+                    'team2_goals' => 0,
+                    'team1_away_goals' => 0,
+                    'team2_away_goals' => 0,
+                    'games_played' => 0,
+                    'total_games' => 0,
+                    'winner' => null,
                 ];
+                $seriesOrder[] = $key; // Adiciona na ordem de criação
+            }
+            
+            $series[$key]['total_games']++;
+            
+            if (!$game->is_played) {
+                continue;
+            }
+            
+            $series[$key]['games_played']++;
+
+            // Contabilizar gols e gols fora de casa
+            if ($game->home_team_id == $series[$key]['team1']) {
+                $series[$key]['team1_goals'] += $game->home_goals;
+                $series[$key]['team2_goals'] += $game->away_goals;
+                $series[$key]['team2_away_goals'] += $game->away_goals; // team2 jogou fora
+            } else {
+                $series[$key]['team1_goals'] += $game->away_goals;
+                $series[$key]['team2_goals'] += $game->home_goals;
+                $series[$key]['team1_away_goals'] += $game->away_goals; // team1 jogou fora
             }
 
             if ($game->home_goals > $game->away_goals) {
@@ -234,51 +298,102 @@ class PlayoffGeneratorService
             }
         }
 
+        \Log::info('Séries de semifinal', ['series' => $series, 'ordem' => $seriesOrder]);
+
+        // Determina o vencedor de cada série na ordem de criação
         $winners = [];
-        foreach ($series as $serie) {
+        foreach ($seriesOrder as $key) {
+            $serie = $series[$key];
+            
+            // Verifica se a série está completa e tem um vencedor
+            // Uma série está completa quando:
+            // 1. Um time tem 2 vitórias (independente de quantos jogos foram jogados), OU
+            // 2. Jogaram os 2 jogos base E critério de gols fora decidiu, OU
+            // 3. Jogaram o jogo 3 decisivo
+            
+            $serieWinner = null;
+            
+            // Se tem 2 vitórias, série está decidida (independente da ordem dos jogos)
             if ($serie['team1_wins'] >= 2) {
-                $winners[] = $serie['team1'];
+                $serieWinner = $serie['team1'];
             } elseif ($serie['team2_wins'] >= 2) {
-                $winners[] = $serie['team2'];
+                $serieWinner = $serie['team2'];
+            } 
+            // Se jogaram pelo menos 2 jogos
+            elseif ($serie['games_played'] >= 2) {
+                // Se empataram em vitórias (1-1 ou 0-0)
+                if ($serie['team1_wins'] == $serie['team2_wins']) {
+                    // Se 1-1, verifica critério de gols fora
+                    if ($serie['team1_wins'] == 1) {
+                        if ($serie['team1_away_goals'] > $serie['team2_away_goals']) {
+                            $serieWinner = $serie['team1'];
+                        } elseif ($serie['team2_away_goals'] > $serie['team1_away_goals']) {
+                            $serieWinner = $serie['team2'];
+                        }
+                        // Se gols fora empatados, aguarda jogo 3
+                        elseif ($serie['games_played'] >= 3) {
+                            // Jogo 3 foi jogado, determina pelo placar agregado
+                            if ($serie['team1_goals'] > $serie['team2_goals']) {
+                                $serieWinner = $serie['team1'];
+                            } elseif ($serie['team2_goals'] > $serie['team1_goals']) {
+                                $serieWinner = $serie['team2'];
+                            } else {
+                                // Empate total - usa melhor classificação
+                                $standings = $this->analyticService->getStanding($championship->id);
+                                $team1Rank = $standings->search(fn($item) => $item->team_id === $serie['team1']);
+                                $team2Rank = $standings->search(fn($item) => $item->team_id === $serie['team2']);
+                                $serieWinner = $team1Rank < $team2Rank ? $serie['team1'] : $serie['team2'];
+                            }
+                        }
+                    }
+                    // Se 0-0 após 2 jogos (dois empates), usa saldo de gols total ou continua sem vencedor
+                    // Isso é raro, mas pode acontecer se ambos jogos terminarem 0-0 ou mesmo placar
+                }
+                // Se tem vitórias diferentes mas jogaram só 2 jogos
+                else {
+                    // Um time tem 1 vitória e o outro 0
+                    // A série ainda não está completa - pode haver um jogo 3 ou o outro time pode vencer o próximo
+                    // Não marca vencedor ainda
+                }
+            }
+            
+            if ($serieWinner) {
+                $winners[] = $serieWinner;
             }
         }
 
-        $finalGames = Fixture::where('championship_id', $championship->id)
-            ->where('is_playoff', true)
-            ->where('playoff_stage', 'final')
-            ->get();
+        \Log::info('Vencedores das semifinais', [
+            'winners_count' => count($winners),
+            'winners' => $winners
+        ]);
 
-        if (count($winners) === 1) {
-            $standings = $this->analyticService->getStandings($championship->id);
-            $winnerRank = $standings->search(fn($item) => $item->team_id === $winners[0]);
-            
-            foreach ($finalGames as $finalGame) {
-                if ($finalGame->playoff_game_number === 1 && !$finalGame->home_team_id) {
-                    $finalGame->update(['away_team_id' => $winners[0]]);
-                } elseif ($finalGame->playoff_game_number === 2 && !$finalGame->away_team_id) {
-                    $finalGame->update(['home_team_id' => $winners[0]]);
-                }
-            }
-        } elseif (count($winners) === 2) {
-            $standings = $this->analyticService->getStandings($championship->id);
-            $team1Rank = $standings->search(fn($item) => $item->team_id === $winners[0]);
-            $team2Rank = $standings->search(fn($item) => $item->team_id === $winners[1]);
+        // SOMENTE criar a final se AMBAS as séries tiverem vencedor definido
+        if (count($winners) === 2) {
+            $finalExists = Fixture::where('championship_id', $championship->id)
+                ->where('is_playoff', true)
+                ->where('playoff_stage', 'final')
+                ->exists();
 
-            $betterTeam = $team1Rank < $team2Rank ? $winners[0] : $winners[1];
-            $worseTeam = $betterTeam === $winners[0] ? $winners[1] : $winners[0];
+            \Log::info('Status da final', ['final_exists' => $finalExists]);
 
-            foreach ($finalGames as $finalGame) {
-                if ($finalGame->playoff_game_number === 1) {
-                    $finalGame->update([
-                        'home_team_id' => $worseTeam,
-                        'away_team_id' => $betterTeam
-                    ]);
-                } elseif ($finalGame->playoff_game_number === 2) {
-                    $finalGame->update([
-                        'home_team_id' => $betterTeam,
-                        'away_team_id' => $worseTeam
-                    ]);
-                }
+            if (!$finalExists) {
+                $standings = $this->analyticService->getStanding($championship->id);
+                $team1Rank = $standings->search(fn($item) => $item->team_id === $winners[0]);
+                $team2Rank = $standings->search(fn($item) => $item->team_id === $winners[1]);
+
+                $betterTeam = $team1Rank < $team2Rank ? $winners[0] : $winners[1];
+                $worseTeam = $betterTeam === $winners[0] ? $winners[1] : $winners[0];
+
+                \Log::info('Criando partidas de final', [
+                    'better_team' => $betterTeam,
+                    'worse_team' => $worseTeam
+                ]);
+
+                // Ida e Volta na Final
+                $this->createPlayoffFixture($championship, $worseTeam, $betterTeam, 'final', 1);
+                $this->createPlayoffFixture($championship, $betterTeam, $worseTeam, 'final', 2);
+
+                \Log::info('Partidas de final criadas com sucesso');
             }
         }
     }
@@ -337,7 +452,7 @@ class PlayoffGeneratorService
                 ->exists();
 
             if (!$finalExists) {
-                $standings = $this->analyticService->getStandings($championship->id);
+                $standings = $this->analyticService->getStanding($championship->id);
                 $team1Rank = $standings->search(fn($item) => $item->team_id === $winners[0]);
                 $team2Rank = $standings->search(fn($item) => $item->team_id === $winners[1]);
 
@@ -369,31 +484,72 @@ class PlayoffGeneratorService
                 return null;
             }
 
+            // Agrupa por time para contar vitórias e gols
             $teams = [];
             foreach ($finalGames as $game) {
                 $team1 = min($game->home_team_id, $game->away_team_id);
                 $team2 = max($game->home_team_id, $game->away_team_id);
 
-                if (!isset($teams[$team1])) $teams[$team1] = 0;
-                if (!isset($teams[$team2])) $teams[$team2] = 0;
+                if (!isset($teams[$team1])) {
+                    $teams[$team1] = ['wins' => 0, 'goals' => 0, 'away_goals' => 0];
+                }
+                if (!isset($teams[$team2])) {
+                    $teams[$team2] = ['wins' => 0, 'goals' => 0, 'away_goals' => 0];
+                }
 
+                // Contabiliza vitórias
                 if ($game->home_goals > $game->away_goals) {
-                    $teams[$game->home_team_id]++;
+                    $teams[$game->home_team_id]['wins']++;
                 } elseif ($game->home_goals < $game->away_goals) {
-                    $teams[$game->away_team_id]++;
+                    $teams[$game->away_team_id]['wins']++;
+                }
+
+                // Contabiliza gols totais e gols fora
+                if ($game->home_team_id == $team1) {
+                    $teams[$team1]['goals'] += $game->home_goals;
+                    $teams[$team2]['goals'] += $game->away_goals;
+                    $teams[$team2]['away_goals'] += $game->away_goals;
+                } else {
+                    $teams[$team2]['goals'] += $game->home_goals;
+                    $teams[$team1]['goals'] += $game->away_goals;
+                    $teams[$team1]['away_goals'] += $game->away_goals;
                 }
             }
 
-            foreach ($teams as $teamId => $wins) {
-                if ($wins >= 2) {
+            // Verifica se algum time tem 2 vitórias
+            foreach ($teams as $teamId => $stats) {
+                if ($stats['wins'] >= 2) {
                     return $teamId;
+                }
+            }
+
+            // Se empate 1-1 em vitórias, usa critério de gols fora
+            $teamIds = array_keys($teams);
+            if (count($teamIds) === 2) {
+                $team1Id = $teamIds[0];
+                $team2Id = $teamIds[1];
+                
+                if ($teams[$team1Id]['wins'] === $teams[$team2Id]['wins']) {
+                    // Critério de gols fora
+                    if ($teams[$team1Id]['away_goals'] > $teams[$team2Id]['away_goals']) {
+                        return $team1Id;
+                    } elseif ($teams[$team2Id]['away_goals'] > $teams[$team1Id]['away_goals']) {
+                        return $team2Id;
+                    }
+                    
+                    // Se gols fora empatados, usa saldo total de gols
+                    if ($teams[$team1Id]['goals'] > $teams[$team2Id]['goals']) {
+                        return $team1Id;
+                    } elseif ($teams[$team2Id]['goals'] > $teams[$team1Id]['goals']) {
+                        return $team2Id;
+                    }
                 }
             }
 
             return null;
         }
 
-        $standings = $this->analyticService->getStandings($championshipId);
+        $standings = $this->analyticService->getStanding($championshipId);
         return $standings->first()?->team_id;
     }
 }

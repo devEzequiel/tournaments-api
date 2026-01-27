@@ -23,6 +23,7 @@ class ChampionshipService extends BaseService implements ChampionshipContract
      */
     public function create($data): bool
     {
+        $data['started_at'] = now();
         $champ = $this->model::create($data);
         self::createFixtures($data['teams'], $champ);
         return true;
@@ -62,6 +63,7 @@ class ChampionshipService extends BaseService implements ChampionshipContract
     function all()
     {
         $championship = $this->model::query()
+            ->with(['awards.getFirstPlace']) // Inclui o relacionamento com awards e o time campeão
             ->get();
 
         if (!$championship) throw new Exception('Nenhum campeonato encontrado');
@@ -92,6 +94,20 @@ class ChampionshipService extends BaseService implements ChampionshipContract
 
         if (!$championship) throw new Exception('Campeonato não encontrado');
 
+        // Deletar todos os gols das partidas deste campeonato
+        $fixtureIds = Fixture::where('championship_id', $championship_id)->pluck('id');
+        \App\Models\Goal::whereIn('fixture_id', $fixtureIds)->delete();
+        
+        // Deletar todas as avaliações de jogadores das partidas deste campeonato
+        \App\Models\PlayerRate::whereIn('fixture_id', $fixtureIds)->delete();
+        
+        // Deletar todos os prêmios deste campeonato
+        \App\Models\Award::where('championship_id', $championship_id)->delete();
+        
+        // Deletar todas as partidas (fixtures)
+        Fixture::where('championship_id', $championship_id)->delete();
+
+        // Deletar o campeonato
         return (bool)$championship->delete();
     }
 

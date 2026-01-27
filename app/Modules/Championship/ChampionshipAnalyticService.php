@@ -59,6 +59,10 @@ class ChampionshipAnalyticService extends BaseService
             ')
                     ->from('fixtures')
                     ->where('championship_id', $championship_id)
+                    ->where(function($q) {
+                        $q->where('is_playoff', false)
+                          ->orWhereNull('is_playoff');
+                    })
                     ->groupBy('home_team_id')
                     ->unionAll(
                         Fixture::query()
@@ -77,6 +81,10 @@ class ChampionshipAnalyticService extends BaseService
                     ')
                             ->from('fixtures')
                             ->where('championship_id', $championship_id)
+                            ->where(function($q) {
+                                $q->where('is_playoff', false)
+                                  ->orWhereNull('is_playoff');
+                            })
                             ->groupBy('away_team_id')
                     );
             }, 'standings_summary')

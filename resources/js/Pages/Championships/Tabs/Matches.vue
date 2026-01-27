@@ -3,27 +3,46 @@
         <h2 class="title">Partidas</h2>
 
         <div v-for="round in groupedMatches" :key="round.round" class="round-block">
-            <h3 class="round-title">Rodada {{ round.round }}</h3>
+            <h3 class="round-title">
+                {{ round.isPlayoff ? (round.stage === 'semifinal' ? 'Semifinais' : 'Final') : `Rodada ${round.round}` }}
+            </h3>
 
-            <div v-for="match in round.matches" :key="match.id" class="match-block" @click="openPlayMatchModal(match)">
+            <div 
+                v-for="match in round.matches" 
+                :key="match.id" 
+                class="match-block" 
+                :class="{ 
+                    'playoff-semifinal': match.is_playoff && match.playoff_stage === 'semifinal',
+                    'playoff-final': match.is_playoff && match.playoff_stage === 'final'
+                }"
+                @click="openPlayMatchModal(match)"
+            >
+                <div class="playoff-badge" v-if="match.is_playoff">
+                    {{ match.playoff_stage === 'semifinal' ? '🏆 Semifinal' : '👑 Final' }}
+                    <span class="game-label">Jogo {{ match.playoff_game_number }}</span>
+                </div>
                 <div class="match-row">
                     <div class="team">
                         <TeamLogo
+                            v-if="match.home_team_id"
                             :firstColor="match.home_team_color"
                             :secondColor="match.home_team_second_color"
                         />
+                        <div v-else class="team-placeholder">?</div>
                         <span class="team-name">
-                            {{ match.home_team_name.slice(0, 3).toUpperCase() }}
+                            {{ match.home_team_name ? match.home_team_name.slice(0, 3).toUpperCase() : 'A DEFINIR' }}
                         </span>
                     </div>
                     <span class="vs">VS</span>
                     <div class="team">
                         <TeamLogo
+                            v-if="match.away_team_id"
                             :firstColor="match.away_team_color"
                             :secondColor="match.away_team_second_color"
                         />
+                        <div v-else class="team-placeholder">?</div>
                         <span class="team-name">
-                            {{ match.away_team_name.slice(0, 3).toUpperCase() }}
+                            {{ match.away_team_name ? match.away_team_name.slice(0, 3).toUpperCase() : 'A DEFINIR' }}
                         </span>
                     </div>
                 </div>
@@ -72,16 +91,29 @@ export default {
         groupedMatches() {
             const rounds = {};
             this.matches.forEach((match) => {
-                if (!rounds[match.round_number]) {
-                    rounds[match.round_number] = [];
+                const key = match.is_playoff 
+                    ? `playoff-${match.playoff_stage}` 
+                    : `round-${match.round_number}`;
+                    
+                if (!rounds[key]) {
+                    rounds[key] = {
+                        round: match.round_number,
+                        matches: [],
+                        isPlayoff: match.is_playoff || false,
+                        stage: match.playoff_stage || null
+                    };
                 }
-                rounds[match.round_number].push(match);
+                rounds[key].matches.push(match);
             });
 
-            return Object.entries(rounds).map(([round, matches]) => ({
-                round: parseInt(round, 10),
-                matches,
-            }));
+            return Object.values(rounds).sort((a, b) => {
+                if (!a.isPlayoff && !b.isPlayoff) return a.round - b.round;
+                if (!a.isPlayoff) return -1;
+                if (!b.isPlayoff) return 1;
+                if (a.stage === 'semifinal' && b.stage === 'final') return -1;
+                if (a.stage === 'final' && b.stage === 'semifinal') return 1;
+                return 0;
+            });
         },
     },
     methods: {
@@ -173,6 +205,55 @@ export default {
 .match-block {
     margin-bottom: 10px;
     cursor: pointer;
+    position: relative;
+}
+
+.playoff-badge {
+    background: linear-gradient(135deg, #6a1b9a, #8e24aa);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 6px 6px 0 0;
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.playoff-final .playoff-badge {
+    background: linear-gradient(135deg, #d4af37, #ffd700);
+    color: #000;
+}
+
+.game-label {
+    font-size: 0.7rem;
+    opacity: 0.9;
+}
+
+.playoff-semifinal .match-row {
+    border: 2px solid #6a1b9a;
+    background: linear-gradient(to right, #f3e5f5, #ffffff);
+    box-shadow: 0 4px 8px rgba(106, 27, 154, 0.2);
+}
+
+.playoff-final .match-row {
+    border: 3px solid #d4af37;
+    background: linear-gradient(to right, #fffbea, #ffffff);
+    box-shadow: 0 6px 12px rgba(212, 175, 55, 0.3);
+}
+
+.team-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e0e0e0, #bdbdbd);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #666;
 }
 
 /* Linha da Partida */

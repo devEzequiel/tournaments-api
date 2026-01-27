@@ -79,8 +79,8 @@ class FixtureService extends BaseService implements FixtureContract
     function getUnplayedFixtures(int $championship_id): \Illuminate\Database\Eloquent\Collection|array
     {
         return $this->model::query()
-            ->join('teams as home_team', 'fixtures.home_team_id', '=', 'home_team.id')
-            ->join('teams as away_team', 'fixtures.away_team_id', '=', 'away_team.id')
+            ->leftJoin('teams as home_team', 'fixtures.home_team_id', '=', 'home_team.id')
+            ->leftJoin('teams as away_team', 'fixtures.away_team_id', '=', 'away_team.id')
             ->select([
                 'fixtures.id',
                 'home_team.name as home_team_name',
@@ -93,6 +93,9 @@ class FixtureService extends BaseService implements FixtureContract
                 'away_team.second_color as away_team_second_color',
                 'fixtures.round_number',
                 'fixtures.game_number',
+                'fixtures.is_playoff',
+                'fixtures.playoff_stage',
+                'fixtures.playoff_game_number',
             ])
             ->orderBy('fixtures.round_number', 'ASC')
             ->orderBy('fixtures.game_number', 'ASC')

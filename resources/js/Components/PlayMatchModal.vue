@@ -9,8 +9,17 @@
                 </button>
             </div>
 
+            <!-- Warning for undefined teams -->
+            <div v-if="!match.home_team_id || !match.away_team_id" class="warning-section">
+                <div class="warning-icon">⚠️</div>
+                <div class="warning-content">
+                    <h3>Partida ainda não pode ser jogada</h3>
+                    <p>Os times desta partida ainda não foram definidos. Complete as partidas anteriores para definir os adversários.</p>
+                </div>
+            </div>
+
             <!-- Score Section -->
-            <div class="score-section">
+            <div v-else class="score-section">
                 <div class="team-score">
                     <TeamLogo
                         v-if="match.home_team_color"
@@ -45,7 +54,7 @@
             </div>
 
             <!-- Penalty Decision Checkbox (only for 3rd playoff games) -->
-            <div v-if="isPlayoffDecisiveGame" class="penalty-section">
+            <div v-if="isPlayoffDecisiveGame && match.home_team_id && match.away_team_id" class="penalty-section">
                 <label class="penalty-checkbox">
                     <input type="checkbox" v-model="decidedByPenalty" />
                     <span class="checkbox-label">
@@ -57,7 +66,7 @@
             </div>
 
             <!-- Goals Section -->
-            <div v-if="homeGoals.length > 0 || awayGoals.length > 0" class="goals-section">
+            <div v-if="(homeGoals.length > 0 || awayGoals.length > 0) && match.home_team_id && match.away_team_id" class="goals-section">
                 <h3 class="section-title">⚽ Gols</h3>
                 
                 <div v-if="homeGoals.length > 0" class="team-goals">
@@ -162,7 +171,13 @@
             <!-- Actions -->
             <div class="modal-actions">
                 <button @click="$emit('close')" type="button" class="btn-cancel">Cancelar</button>
-                <button @click="submitMatch" type="button" class="btn-save" :disabled="isSubmitting">
+                <button 
+                    v-if="match.home_team_id && match.away_team_id"
+                    @click="submitMatch" 
+                    type="button" 
+                    class="btn-save" 
+                    :disabled="isSubmitting"
+                >
                     <span v-if="!isSubmitting">💾 Salvar Partida</span>
                     <span v-else>Salvando...</span>
                 </button>
@@ -413,6 +428,37 @@ export default {
 .close-btn:hover {
     background: rgba(255, 255, 255, 0.3);
     transform: rotate(90deg);
+}
+
+/* Warning Section */
+.warning-section {
+    display: flex;
+    gap: 20px;
+    padding: 30px;
+    margin: 20px;
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    border: 2px solid #ffc107;
+    border-radius: 12px;
+    align-items: flex-start;
+}
+
+.warning-icon {
+    font-size: 48px;
+    flex-shrink: 0;
+}
+
+.warning-content h3 {
+    margin: 0 0 10px 0;
+    color: #856404;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.warning-content p {
+    margin: 0;
+    color: #856404;
+    font-size: 16px;
+    line-height: 1.5;
 }
 
 /* Score Section */

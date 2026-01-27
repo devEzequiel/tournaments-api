@@ -113,4 +113,50 @@ class ChampionshipController extends Controller
             return $this->responseUnprocessableEntity($e->getMessage());
         }
     }
+    
+    public function getAwards(int $championship_id): JsonResponse
+    {
+        try {
+            $award = \App\Models\Award::where('championship_id', $championship_id)
+                ->with(['bestPlayer', 'goldenBoot', 'playmaker'])
+                ->first();
+            
+            if (!$award) {
+                return $this->responseOk([]);
+            }
+            
+            $awards = [];
+            
+            // The Best (melhor jogador)
+            if ($award->best_player && $award->bestPlayer) {
+                $awards[] = [
+                    'id' => $award->id . '_best',
+                    'type' => 'the_best',
+                    'player_name' => $award->bestPlayer->name,
+                ];
+            }
+            
+            // Artilheiro
+            if ($award->golden_boot && $award->goldenBoot) {
+                $awards[] = [
+                    'id' => $award->id . '_scorer',
+                    'type' => 'top_scorer',
+                    'player_name' => $award->goldenBoot->name,
+                ];
+            }
+            
+            // Playmaker (melhor assistente)
+            if ($award->playmaker && $award->playmaker) {
+                $awards[] = [
+                    'id' => $award->id . '_playmaker',
+                    'type' => 'playmaker',
+                    'player_name' => $award->playmaker->name,
+                ];
+            }
+            
+            return $this->responseOk($awards);
+        } catch (\Exception $e) {
+            return $this->responseUnprocessableEntity($e->getMessage());
+        }
+    }
 }

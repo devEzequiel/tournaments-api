@@ -24,8 +24,18 @@ class Award extends Model
     {
         return $this->belongsTo(Player::class, 'best_player', 'id');
     }
+    
+    public function bestPlayer(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Player::class, 'best_player', 'id');
+    }
 
     public function getGoldenBoot(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Player::class, 'golden_boot', 'id');
+    }
+    
+    public function goldenBoot(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Player::class, 'golden_boot', 'id');
     }
@@ -36,6 +46,11 @@ class Award extends Model
     }
 
     public function getPlaymaker(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Player::class, 'playmaker', 'id');
+    }
+    
+    public function playmaker(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Player::class, 'playmaker', 'id');
     }

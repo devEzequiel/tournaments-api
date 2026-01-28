@@ -50,29 +50,57 @@ class FixtureService extends BaseService implements FixtureContract
             ->get();
     }
 
-    public function getFixturesWithBasicInfo(int $championship_id): \Illuminate\Database\Eloquent\Collection|array
+    public function getFixturesWithBasicInfo(int $championship_id): array
     {
-        return $this->model::query()
+        $fixtures = $this->model::query()
             ->join('teams as home_team', 'fixtures.home_team_id', '=', 'home_team.id')
             ->join('teams as away_team', 'fixtures.away_team_id', '=', 'away_team.id')
             ->select([
                 'fixtures.id',
+                'fixtures.home_team_id',
+                'fixtures.away_team_id',
                 'home_team.name as home_team_name',
                 'away_team.name as away_team_name',
-                'home_team.first_color as home_team_first_color',
+                'home_team.first_color as home_team_color',
                 'home_team.second_color as home_team_second_color',
-                'away_team.first_color as away_team_first_color',
+                'away_team.first_color as away_team_color',
                 'away_team.second_color as away_team_second_color',
                 'fixtures.round_number',
                 'fixtures.game_number',
                 'fixtures.home_goals',
                 'fixtures.away_goals',
                 'fixtures.played_at',
+                'fixtures.is_playoff',
+                'fixtures.playoff_stage',
+                'fixtures.playoff_game_number',
+                'fixtures.is_played'
             ])
+            ->where('fixtures.championship_id', $championship_id)
             ->orderBy('fixtures.round_number', 'ASC')
             ->orderBy('fixtures.game_number', 'ASC')
-            ->where('fixtures.championship_id', $championship_id)
             ->get();
+
+        $championship = Championship::find($championship_id);
+        $champion = null;
+        
+        if ($championship) {
+            $playoffService = new PlayoffGeneratorService(new ChampionshipAnalyticService(new Championship()));
+            $championId = $playoffService->getChampion($championship_id);
+            
+            if ($championId) {
+                $champion = Team::find($championId);
+            }
+        }
+
+        return [
+            'fixtures' => $fixtures,
+            'champion' => $champion ? [
+                'id' => $champion->id,
+                'name' => $champion->name,
+                'first_color' => $champion->first_color,
+                'second_color' => $champion->second_color,
+            ] : null,
+        ];
     }
 
     public
@@ -158,19 +186,24 @@ class FixtureService extends BaseService implements FixtureContract
 
         // Verifica se é um jogo de playoff e se precisa gerar terceiro jogo
         if ($fixture->is_playoff) {
-            $playoffService = new PlayoffGeneratorService(new ChampionshipAnalyticService());
+            $playoffService = new PlayoffGeneratorService(new ChampionshipAnalyticService(new Championship()));
             $playoffService->checkAndCreateDecisiveGame($fixture->id);
         }
 
-        $has_fixtures = Fixture::query()
-            ->where('championship_id', $fixture->championship_id)
-            ->where('is_played', false)
-            ->get();
-
-        // Se todos os jogos da fase de grupos terminaram e tem playoffs, gerar playoffs
-        if (!$has_fixtures->count() && $champ->playoffs && $champ->playoff_type) {
+        // Verifica se todos os jogos da fase de grupos terminaram e tem playoffs
+        $playoffsGenerated = false;
+        \Log::info('Verificando geração de playoffs', [
+            'championship_id' => $champ->id,
+            'has_playoffs' => $champ->playoffs,
+            'playoff_type' => $champ->playoff_type
+        ]);
+        
+        if ($champ->playoffs && $champ->playoff_type) {
             $regularSeasonEnded = !Fixture::where('championship_id', $champ->id)
-                ->where('is_playoff', false)
+                ->where(function($query) {
+                    $query->where('is_playoff', false)
+                          ->orWhereNull('is_playoff');
+                })
                 ->where('is_played', false)
                 ->exists();
             
@@ -178,27 +211,71 @@ class FixtureService extends BaseService implements FixtureContract
                 ->where('is_playoff', true)
                 ->exists();
 
+            \Log::info('Status da temporada regular', [
+                'championship_id' => $champ->id,
+                'regular_season_ended' => $regularSeasonEnded,
+                'playoff_not_started' => $playoffNotStarted
+            ]);
+
             if ($regularSeasonEnded && $playoffNotStarted) {
-                $playoffService = new PlayoffGeneratorService(new ChampionshipAnalyticService());
+                \Log::info('Gerando playoffs', [
+                    'championship_id' => $champ->id,
+                    'playoff_type' => $champ->playoff_type
+                ]);
+                $playoffService = new PlayoffGeneratorService(new ChampionshipAnalyticService(new Championship()));
                 $playoffService->generatePlayoffs($champ->id);
+                $playoffsGenerated = true;
             }
         }
+
+        $has_fixtures = Fixture::query()
+            ->where('championship_id', $fixture->championship_id)
+            ->where('is_played', false)
+            ->get();
         
-        if (!$has_fixtures->count() && !$champ->playoffs) {
-            $champ->update(['finished_at' => now()]);
+        // Verifica se o campeonato terminou (sem partidas pendentes)
+        if (!$has_fixtures->count()) {
+            // Para campeonatos COM playoffs, verifica se a final foi concluída
+            if ($champ->playoffs) {
+                $finalCompleted = Fixture::where('championship_id', $champ->id)
+                    ->where('is_playoff', true)
+                    ->where('playoff_stage', 'final')
+                    ->where('is_played', true)
+                    ->count();
+                
+                $totalFinalGames = Fixture::where('championship_id', $champ->id)
+                    ->where('is_playoff', true)
+                    ->where('playoff_stage', 'final')
+                    ->count();
+                
+                // Se todas as finais foram jogadas, marca como finalizado
+                if ($finalCompleted > 0 && $finalCompleted === $totalFinalGames) {
+                    $champ->update(['finished_at' => now()]);
+                    
+                    $has_awards = Award::where('championship_id', $fixture->championship_id)->exists();
+                    
+                    if (!$has_awards) {
+                        $this->saveAwards($fixture);
+                    }
+                }
+            } else {
+                // Campeonatos SEM playoffs
+                $champ->update(['finished_at' => now()]);
 
-            $has_awards = $champ->whereHas('awards', function ($query) use ($fixture) {
-                $query->where('championship_id', $fixture->championship_id);
-            });
+                $has_awards = $champ->whereHas('awards', function ($query) use ($fixture) {
+                    $query->where('championship_id', $fixture->championship_id);
+                });
 
-            if (!$has_awards->count()) {
-                $this->saveAwards($fixture);
+                if (!$has_awards->count()) {
+                    $this->saveAwards($fixture);
+                }
             }
         }
 
         return [
             'success' => true,
-            'final_round_generated' => $finalRoundGenerated
+            'final_round_generated' => $finalRoundGenerated,
+            'playoffs_generated' => $playoffsGenerated
         ];
     }
 
@@ -248,6 +325,22 @@ class FixtureService extends BaseService implements FixtureContract
     private function saveAwards(Fixture $fixture)
     {
         $championshipId = $fixture->championship_id;
+        $championship = Championship::find($championshipId);
+
+        // Determinar o campeão
+        $champion = null;
+        if ($championship->playoffs) {
+            // Para campeonatos com playoffs, usar o serviço de playoffs
+            $playoffService = new \App\Modules\Championship\PlayoffGeneratorService(
+                new \App\Modules\Championship\ChampionshipAnalyticService(new Championship())
+            );
+            $champion = $playoffService->getChampion($championshipId);
+        } else {
+            // Para campeonatos sem playoffs, o primeiro colocado na tabela
+            $analyticService = new \App\Modules\Championship\ChampionshipAnalyticService(new Championship());
+            $standings = $analyticService->getStanding($championshipId);
+            $champion = $standings->first()?->team_id;
+        }
 
         // Melhor jogador (Best Player): jogador com a melhor média de notas
         $bestPlayer = DB::table('player_rates')
@@ -278,15 +371,14 @@ class FixtureService extends BaseService implements FixtureContract
             ->orderByDesc('assist_count')
             ->first();
 
-        // Verificar se todos os valores foram encontrados antes de salvar no banco de dados
-        if ($bestPlayer && $goldenBoot && $playmaker) {
-            DB::table('awards')->insert([
-                'championship_id' => $championshipId,
-                'best_player' => $bestPlayer->player_id,
-                'golden_boot' => $goldenBoot->scorer_id,
-                'playmaker' => $playmaker->assist_id,
-            ]);
-        }
+        // Salvar awards com o campeão
+        DB::table('awards')->insert([
+            'championship_id' => $championshipId,
+            'first_place' => $champion,
+            'best_player' => $bestPlayer?->player_id,
+            'golden_boot' => $goldenBoot?->scorer_id,
+            'playmaker' => $playmaker?->assist_id,
+        ]);
     }
 
     private function processPlayoffs($championship): void

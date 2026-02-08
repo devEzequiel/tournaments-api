@@ -7,9 +7,11 @@ Route::controller(ChampionshipController::class)->prefix('championship')
     ->group(function () {
         Route::get('{championship_id}/fixtures', 'getFixtures');
         Route::post('{championship_id}/generate-final-round', 'generateFinalRound');
-        Route::apiResource('/', ChampionshipController::class)->only(['store', 'update', 'destroy']);
-
+        Route::post('/', 'store');
+        Route::put('/{id}', 'update');
+        Route::delete('/{id}', 'destroy');
         Route::get('/{championship_id}', 'detail');
+        Route::get('/{championship_id}/awards', 'getAwards');
     });
 
 Route::controller(\App\Modules\Championship\ChampionshipAnalyticController::class)

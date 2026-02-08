@@ -2,6 +2,12 @@
     <div class="matches-container">
         <h2 class="title">Partidas</h2>
 
+        <!-- Playoff Bracket (Show first if exists) -->
+        <PlayoffBracket 
+            :matches="matches" 
+            @match-click="openPlayMatchModal" 
+        />
+
         <div v-for="round in groupedMatches" :key="round.round" class="round-block">
             <h3 class="round-title">
                 {{ round.isPlayoff ? (round.stage === 'semifinal' ? 'Semifinais' : 'Final') : `Rodada ${round.round}` }}
@@ -28,9 +34,8 @@
                             :firstColor="match.home_team_color"
                             :secondColor="match.home_team_second_color"
                         />
-                        <div v-else class="team-placeholder">?</div>
                         <span class="team-name">
-                            {{ match.home_team_name ? match.home_team_name.slice(0, 3).toUpperCase() : 'A DEFINIR' }}
+                            {{ match.home_team_name ? match.home_team_name.slice(0, 3).toUpperCase() : '' }}
                         </span>
                     </div>
                     <span class="vs">VS</span>
@@ -40,9 +45,8 @@
                             :firstColor="match.away_team_color"
                             :secondColor="match.away_team_second_color"
                         />
-                        <div v-else class="team-placeholder">?</div>
                         <span class="team-name">
-                            {{ match.away_team_name ? match.away_team_name.slice(0, 3).toUpperCase() : 'A DEFINIR' }}
+                            {{ match.away_team_name ? match.away_team_name.slice(0, 3).toUpperCase() : '' }}
                         </span>
                     </div>
                 </div>
@@ -62,6 +66,7 @@
 <script>
 import TeamLogo from "@/Components/TeamLogo.vue";
 import PlayMatchModal from "@/Components/PlayMatchModal.vue";
+import PlayoffBracket from "@/Components/PlayoffBracket.vue";
 import axios from "axios";
 import { useToast } from "@/Composables/useToast";
 
@@ -69,6 +74,7 @@ export default {
     components: {
         TeamLogo,
         PlayMatchModal,
+        PlayoffBracket,
     },
     props: {
         matches: {
@@ -78,6 +84,10 @@ export default {
         championshipId: {
             type: Number,
             required: true, // Exige ID do campeonato
+        },
+        champion: {
+            type: Object,
+            default: null,
         },
     },
     data() {
@@ -90,7 +100,10 @@ export default {
     computed: {
         groupedMatches() {
             const rounds = {};
-            this.matches.forEach((match) => {
+            // Filtrar apenas partidas não jogadas para exibição na lista
+            const matchesToShow = this.matches.filter(match => !match.is_played);
+            
+            matchesToShow.forEach((match) => {
                 const key = match.is_playoff 
                     ? `playoff-${match.playoff_stage}` 
                     : `round-${match.round_number}`;
@@ -338,5 +351,90 @@ export default {
         padding: 8px 14px; /* Redução no padding interno */
         cursor: pointer;
     }
+    
+    .champion-banner {
+        padding: 15px;
+    }
+    
+    .champion-title {
+        font-size: 1.2rem;
+    }
+    
+    .champion-name {
+        font-size: 1rem;
+    }
 }
+
+/* Banner do Campeão */
+.champion-banner {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
+    border: 3px solid #ff6b00;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 8px 20px rgba(255, 215, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    animation: championPulse 2s ease-in-out infinite;
+}
+
+@keyframes championPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 8px 20px rgba(255, 215, 0, 0.5);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 12px 30px rgba(255, 215, 0, 0.7);
+    }
+}
+
+.champion-trophy {
+    font-size: 4rem;
+    animation: rotateTrophy 3s ease-in-out infinite;
+}
+
+@keyframes rotateTrophy {
+    0%, 100% {
+        transform: rotate(-5deg);
+    }
+    50% {
+        transform: rotate(5deg);
+    }
+}
+
+.champion-content {
+    text-align: center;
+}
+
+.champion-title {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #8b4513;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    margin-bottom: 15px;
+    letter-spacing: 3px;
+}
+
+.champion-team {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    justify-content: center;
+}
+
+.champion-logo {
+    width: 60px;
+    height: 60px;
+}
+
+.champion-name {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #4a2c0f;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
 </style>

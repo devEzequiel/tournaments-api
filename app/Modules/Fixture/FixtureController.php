@@ -56,6 +56,9 @@ class FixtureController extends Controller
             if (isset($result['final_round_generated']) && $result['final_round_generated']) {
                 $message .= '. Rodada final gerada automaticamente!';
             }
+            if (isset($result['playoffs_generated']) && $result['playoffs_generated']) {
+                $message .= '. Playoffs gerados!';
+            }
 
             return $this->responseOk($result, $message);
         } catch (\Exception $e) {

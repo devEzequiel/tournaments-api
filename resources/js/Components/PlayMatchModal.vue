@@ -9,17 +9,8 @@
                 </button>
             </div>
 
-            <!-- Warning for undefined teams -->
-            <div v-if="!match.home_team_id || !match.away_team_id" class="warning-section">
-                <div class="warning-icon">⚠️</div>
-                <div class="warning-content">
-                    <h3>Partida ainda não pode ser jogada</h3>
-                    <p>Os times desta partida ainda não foram definidos. Complete as partidas anteriores para definir os adversários.</p>
-                </div>
-            </div>
-
             <!-- Score Section -->
-            <div v-else class="score-section">
+            <div class="score-section">
                 <div class="team-score">
                     <TeamLogo
                         v-if="match.home_team_color"
@@ -54,7 +45,7 @@
             </div>
 
             <!-- Penalty Decision Checkbox (only for 3rd playoff games) -->
-            <div v-if="isPlayoffDecisiveGame && match.home_team_id && match.away_team_id" class="penalty-section">
+            <div v-if="isPlayoffDecisiveGame" class="penalty-section">
                 <label class="penalty-checkbox">
                     <input type="checkbox" v-model="decidedByPenalty" />
                     <span class="checkbox-label">
@@ -66,7 +57,7 @@
             </div>
 
             <!-- Goals Section -->
-            <div v-if="(homeGoals.length > 0 || awayGoals.length > 0) && match.home_team_id && match.away_team_id" class="goals-section">
+            <div v-if="(homeGoals.length > 0 || awayGoals.length > 0)" class="goals-section">
                 <h3 class="section-title">⚽ Gols</h3>
                 
                 <div v-if="homeGoals.length > 0" class="team-goals">
@@ -172,7 +163,6 @@
             <div class="modal-actions">
                 <button @click="$emit('close')" type="button" class="btn-cancel">Cancelar</button>
                 <button 
-                    v-if="match.home_team_id && match.away_team_id"
                     @click="submitMatch" 
                     type="button" 
                     class="btn-save" 
@@ -218,8 +208,12 @@ export default {
             return [...this.homeTeamPlayers, ...this.awayTeamPlayers];
         },
         // Verifica se é jogo decisivo de playoff (3º jogo)
+        // Só mostra pênalti se for o 3º jogo que foi criado por necessidade (desempate)
         isPlayoffDecisiveGame() {
-            return this.match.is_playoff && this.match.playoff_game_number === 3;
+            // Deve ser playoff, jogo número 3, e verificar se realmente existe (criado por empate)
+            return this.match.is_playoff && 
+                   this.match.playoff_game_number === 3 &&
+                   (this.match.playoff_stage === 'semifinal' || this.match.playoff_stage === 'final');
         }
     },
     watch: {
@@ -251,6 +245,11 @@ export default {
 
         // Buscar jogadores do time da casa
         async fetchHomePlayers(teamId) {
+            if (!teamId) {
+                console.warn("ID do time da casa não fornecido");
+                this.homeTeamPlayers = [];
+                return;
+            }
             try {
                 const { data } = await axios.get(`/api/team/${teamId}/current`);
                 this.homeTeamPlayers = data.data || [];
@@ -262,12 +261,18 @@ export default {
                 });
             } catch (error) {
                 console.error("Erro ao carregar jogadores do time da casa:", error);
+                this.toast.error("Erro ao carregar jogadores do time da casa");
                 this.homeTeamPlayers = [];
             }
         },
 
         // Buscar jogadores do time visitante
         async fetchAwayPlayers(teamId) {
+            if (!teamId) {
+                console.warn("ID do time visitante não fornecido");
+                this.awayTeamPlayers = [];
+                return;
+            }
             try {
                 const { data } = await axios.get(`/api/team/${teamId}/current`);
                 this.awayTeamPlayers = data.data || [];
@@ -279,6 +284,7 @@ export default {
                 });
             } catch (error) {
                 console.error("Erro ao carregar jogadores do time visitante:", error);
+                this.toast.error("Erro ao carregar jogadores do time visitante");
                 this.awayTeamPlayers = [];
             }
         },
@@ -323,15 +329,20 @@ export default {
             try {
                 const response = await axios.put(`/api/fixtures`, payload);
                 
-                // Verifica se rodada final foi gerada
+                let message = "Partida salva com sucesso.";
+                
                 if (response.data?.data?.final_round_generated) {
-                    this.toast.success("Partida salva. Rodada final gerada automaticamente.");
-                } else {
-                    this.toast.success("Partida salva com sucesso.");
+                    message = "Partida salva. Rodada final gerada automaticamente.";
                 }
                 
-                this.$emit("updated"); // Avisar o componente pai
-                this.$emit("close"); // Fechar o modal
+                if (response.data?.data?.playoffs_generated) {
+                    message = "Partida salva. Playoffs gerados! Confira as novas partidas.";
+                }
+                
+                this.toast.success(message);
+                
+                this.$emit("updated");
+                this.$emit("close");
             } catch (error) {
                 console.error("Erro ao salvar a partida:", error);
                 this.toast.error("Erro ao tentar salvar a partida.");

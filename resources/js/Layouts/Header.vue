@@ -40,6 +40,16 @@
                     <li class="nav-item">
                         <InertiaLink href="/settings" class="nav-link">Settings</InertiaLink>
                     </li>
+                    <li class="nav-item" v-if="$page.props.auth.user">
+                        <InertiaLink 
+                            href="/logout" 
+                            method="post" 
+                            as="button" 
+                            class="nav-link logout-btn"
+                        >
+                            <i class="fas fa-sign-out-alt"></i> Sair
+                        </InertiaLink>
+                    </li>
                 </ul>
             </nav>
         </div>
@@ -259,5 +269,20 @@ export default {
         font-size: 0.8rem;
         padding: 0.4rem 0.7rem;
     }
+}
+
+/* Botão de logout */
+.logout-btn {
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.logout-btn:hover {
+    background: rgba(239, 68, 68, 0.4);
+    border-color: rgba(239, 68, 68, 0.6);
 }
 </style>

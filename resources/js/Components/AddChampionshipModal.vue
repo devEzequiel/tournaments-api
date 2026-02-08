@@ -285,9 +285,10 @@ export default {
 
             // Validar número mínimo de times para playoffs
             if (this.form.playoffs) {
-                const minTeams = this.form.playoff_type === 'semifinal' ? 4 : 2;
+                const minTeams = this.form.playoff_type === 'semifinal' ? 4 : 3;
+                const playoffLabel = this.form.playoff_type === 'semifinal' ? 'semifinais' : 'final';
                 if (this.form.teams.length < minTeams) {
-                    this.toast.warning(`Para playoffs ${this.form.playoff_type === 'semifinal' ? 'com semifinais' : ''} você precisa de pelo menos ${minTeams} times.`);
+                    this.toast.warning(`Para playoffs com ${playoffLabel} você precisa de pelo menos ${minTeams} times.`);
                     return;
                 }
             }
@@ -302,11 +303,18 @@ export default {
                     teams: this.form.teams.map((team) => team.id),
                 };
 
-                await axios.post("/api/championship", payload);
+                const response = await axios.post("/api/championship", payload);
 
                 this.toast.success("Campeonato criado com sucesso.");
                 this.closeModal();
-                this.$emit("reload");
+                
+                // Redirecionar para a página do campeonato
+                if (this.form.name) {
+                    const slug = this.form.name.toLowerCase().replace(/\s+/g, '-');
+                    window.location.href = `/championships/${slug}`;
+                } else {
+                    this.$emit("reload");
+                }
             } catch (error) {
                 console.error(error);
                 const errorMsg = error.response?.data?.message || "Erro ao criar campeonato";

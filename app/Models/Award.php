@@ -5,6 +5,22 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Model que representa as premiações de um campeonato.
+ * 
+ * Armazena os vencedores de cada categoria: classificação final
+ * (1º, 2º, 3º lugar) e premiações individuais.
+ * 
+ * @property int $id Identificador único
+ * @property int $championship_id ID do campeonato
+ * @property int|null $first_place ID do time campeão
+ * @property int|null $second_place ID do time vice-campeão
+ * @property int|null $third_place ID do time terceiro colocado
+ * @property int|null $best_player ID do melhor jogador do campeonato
+ * @property int|null $golden_boot ID do artilheiro (mais gols)
+ * @property int|null $golden_glove ID do melhor goleiro
+ * @property int|null $playmaker ID do jogador com mais assistências
+ */
 class Award extends Model
 {
     use HasFactory;

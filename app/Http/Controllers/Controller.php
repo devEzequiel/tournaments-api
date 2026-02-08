@@ -10,6 +10,14 @@ use Illuminate\Http\Response;
 use Illuminate\Routing\Controller as BaseController;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
+/**
+ * Controller base do sistema.
+ * 
+ * Fornece métodos helper para respostas HTTP padronizadas,
+ * facilitando a criação de APIs RESTful consistentes.
+ * 
+ * Todos os controllers devem estender esta classe.
+ */
 class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;

@@ -2,17 +2,38 @@
 
 namespace App\Models;
 
+/**
+ * Model que representa um jogador no sistema.
+ * 
+ * Um jogador pode pertencer a diferentes times ao longo do tempo,
+ * marcar gols, dar assistências e receber avaliações de desempenho.
+ * 
+ * @property int $id Identificador único do jogador
+ * @property string $name Nome do jogador
+ * @property \Carbon\Carbon $created_at Data de criação
+ * @property \Carbon\Carbon $updated_at Data de atualização
+ */
 class Player extends BaseModel
 {
     protected $fillable = [
         'name'
     ];
 
+    /**
+     * Retorna o(s) time(s) do jogador através da tabela pivot.
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
     public function team(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(TeamPlayer::class, 'team_player', 'player_id', 'team_id');
     }
 
+    /**
+     * Retorna os gols marcados pelo jogador, agrupados por jogador.
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function goals(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Goal::class, 'scorer_id')
@@ -20,6 +41,11 @@ class Player extends BaseModel
             ->groupBy('player_id');
     }
 
+    /**
+     * Retorna as assistências do jogador, agrupadas por jogador.
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function assists(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Goal::class, 'assist_id')
@@ -27,18 +53,39 @@ class Player extends BaseModel
             ->groupBy('player_id');
     }
 
+    /**
+     * Retorna o time atual do jogador.
+     * 
+     * Filtra pela flag current_team = 1 na tabela pivot.
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
     public function currentTeam(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(TeamPlayer::class, 'team_id', 'id')
             ->where('current_team', 1);
     }
 
+    /**
+     * Retorna os times anteriores do jogador.
+     * 
+     * Histórico de times pelos quais o jogador passou.
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function oldTeams(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(TeamPlayer::class, 'team_id', 'id')
             ->where('current_team', 0);
     }
 
+    /**
+     * Retorna os gols do jogador agrupados por time.
+     * 
+     * Útil para análise de performance por equipe.
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function getGoalsByTeam(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Goal::class, 'scorer_id')
@@ -46,6 +93,13 @@ class Player extends BaseModel
             ->groupBy('team_id');
     }
 
+    /**
+     * Retorna as assistências do jogador agrupadas por time.
+     * 
+     * Útil para análise de performance por equipe.
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function getAssistsByTeam(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Goal::class, 'assist_id')
@@ -63,6 +117,13 @@ class Player extends BaseModel
 //            ->groupBy('team_id');
     }
 
+    /**
+     * Retorna a média de avaliação (rating) do jogador.
+     * 
+     * Calcula a média de todas as avaliações recebidas.
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function getRate(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(PlayerRate::class, 'player_id', 'id')
@@ -70,6 +131,14 @@ class Player extends BaseModel
             ->groupBy('player_id');
     }
 
+    /**
+     * Retorna as premiações individuais do jogador.
+     * 
+     * Conta quantas vezes foi: melhor jogador, artilheiro,
+     * melhor goleiro e melhor assistente.
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function getAwards()
     {
         return $this->hasMany(Award::class, 'player_id', 'id')

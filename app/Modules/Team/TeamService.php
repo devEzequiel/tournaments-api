@@ -12,20 +12,42 @@ use App\Services\BaseService;
 use Exception;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Serviço responsável pela lógica de negócio de Times.
+ * 
+ * Gerencia operações CRUD de times, incluindo:
+ * - Criação e atualização de times
+ * - Consulta de jogadores atuais do time
+ * - Estatísticas e análises por time
+ */
 class TeamService extends BaseService implements TeamContract
 {
+    /**
+     * Construtor do serviço.
+     * Inicializa com o model Team.
+     */
     public function __construct()
     {
         parent::__construct(new Team());
     }
 
+    /**
+     * Cria um novo time.
+     * 
+     * @param array $data Dados do time (name, first_color, second_color)
+     * @return bool Sucesso da operação
+     */
     public function create($data): bool
     {
         return (bool)$this->model::create($data);
     }
 
     /**
-     * @throws Exception
+     * Busca um time pelo ID.
+     * 
+     * @param int $id ID do time
+     * @return Team Time encontrado
+     * @throws Exception Quando o time não é encontrado
      */
     public function find(int $id)
     {
@@ -41,7 +63,13 @@ class TeamService extends BaseService implements TeamContract
     }
 
     /**
-     * @throws Exception
+     * Retorna os jogadores atualmente no time.
+     * 
+     * Filtra apenas jogadores com current_team = true.
+     * 
+     * @param int $id ID do time
+     * @return \Illuminate\Support\Collection Lista de jogadores
+     * @throws Exception Em caso de erro
      */
     public function getCurrentPlayers(int $id)
     {

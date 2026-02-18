@@ -8,12 +8,32 @@ use App\Http\Requests\Team\UpdateTeamRequest;
 use Exception;
 use Illuminate\Http\JsonResponse;
 
+/**
+ * Controller responsável pelas operações de Time.
+ * 
+ * Gerencia requisições HTTP para:
+ * - Listagem e visualização de times (Inertia + API)
+ * - CRUD completo de times
+ * - Consulta de jogadores por time
+ */
 class TeamController extends Controller
 {
+    /**
+     * Construtor com injeção de dependência do serviço.
+     * 
+     * @param TeamService $service Serviço de times
+     */
     public function __construct(protected TeamService $service)
     {
     }
 
+    /**
+     * Exibe a página de listagem de times.
+     * 
+     * Renderiza via Inertia.js a view Teams/Index.
+     * 
+     * @return \Inertia\Response
+     */
     public function index()
     {
         try {
@@ -29,6 +49,11 @@ class TeamController extends Controller
         }
     }
 
+    /**
+     * Retorna a lista de times via API.
+     * 
+     * @return JsonResponse Lista de times
+     */
     public function list()
     {
         try {
@@ -40,6 +65,12 @@ class TeamController extends Controller
         }
     }
 
+    /**
+     * Cria um novo time.
+     * 
+     * @param CreateTeamRequest $request Request validado
+     * @return JsonResponse Resposta com status 201 ou erro
+     */
     public function store(CreateTeamRequest $request): JsonResponse
     {
         try {
@@ -53,6 +84,12 @@ class TeamController extends Controller
         }
     }
 
+    /**
+     * Exibe a página de detalhes de um time.
+     * 
+     * @param string $name Nome do time em formato slug
+     * @return \Inertia\Response
+     */
     public function show(string $name)
     {
         try {
@@ -68,6 +105,12 @@ class TeamController extends Controller
         }
     }
 
+    /**
+     * Retorna os detalhes de um time via API.
+     * 
+     * @param int $id ID do time
+     * @return JsonResponse Dados do time
+     */
     public function detail(int $id): JsonResponse
     {
         try {
@@ -79,6 +122,12 @@ class TeamController extends Controller
         }
     }
 
+    /**
+     * Retorna os jogadores atuais de um time.
+     * 
+     * @param int $id ID do time
+     * @return JsonResponse Lista de jogadores
+     */
     public function currentPlayers(int $id): JsonResponse
     {
         try {
@@ -90,6 +139,13 @@ class TeamController extends Controller
         }
     }
 
+    /**
+     * Atualiza um time existente.
+     * 
+     * @param UpdateTeamRequest $request Request validado
+     * @param int $id ID do time
+     * @return JsonResponse Resposta com status 201 ou erro
+     */
     public function update(UpdateTeamRequest $request, int $id): JsonResponse
     {
         try {

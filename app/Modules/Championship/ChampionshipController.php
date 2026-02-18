@@ -8,12 +8,33 @@ use App\Http\Requests\Championship\UpdateChampionshipRequest;
 use Exception;
 use Illuminate\Http\JsonResponse;
 
+/**
+ * Controller responsável pelas operações de Campeonato.
+ * 
+ * Gerencia requisições HTTP para:
+ * - Listagem e visualização de campeonatos (Inertia)
+ * - API RESTful para CRUD de campeonatos
+ * - Consulta de fixtures por campeonato
+ */
 class ChampionshipController extends Controller
 {
+    /**
+     * Construtor com injeção de dependência do serviço.
+     * 
+     * @param ChampionshipService $service Serviço de campeonatos
+     */
     public function __construct(protected ChampionshipService $service)
     {
     }
 
+    /**
+     * Exibe a página de listagem de campeonatos.
+     * 
+     * Renderiza via Inertia.js a view Championships/Index
+     * com todos os campeonatos disponíveis.
+     * 
+     * @return \Inertia\Response
+     */
     public function index()
     {
         try {
@@ -29,6 +50,14 @@ class ChampionshipController extends Controller
         }
     }
 
+    /**
+     * Cria um novo campeonato.
+     * 
+     * Recebe dados validados e cria o campeonato com suas fixtures.
+     * 
+     * @param CreateChampionshipRequest $request Request validado
+     * @return JsonResponse Resposta com status 201 ou erro
+     */
     public function store(CreateChampionshipRequest $request): JsonResponse
     {
         try {
@@ -42,6 +71,14 @@ class ChampionshipController extends Controller
         }
     }
 
+    /**
+     * Exibe a página de detalhes de um campeonato.
+     * 
+     * Busca o campeonato pelo nome (slug) e renderiza via Inertia.
+     * 
+     * @param string $name Nome do campeonato em formato slug
+     * @return \Inertia\Response
+     */
     public function show(string $name)
     {
         try {
@@ -57,6 +94,12 @@ class ChampionshipController extends Controller
         }
     }
 
+    /**
+     * Retorna os detalhes de um campeonato via API.
+     * 
+     * @param int $id ID do campeonato
+     * @return JsonResponse Dados do campeonato
+     */
     public function detail(int $id)
     {
         try {
@@ -68,6 +111,14 @@ class ChampionshipController extends Controller
         }
     }
 
+    /**
+     * Retorna as fixtures de um campeonato via API.
+     * 
+     * Lista todas as partidas ordenadas por rodada e número do jogo.
+     * 
+     * @param int $id ID do campeonato
+     * @return JsonResponse Lista de fixtures
+     */
     public function getFixtures(int $id): JsonResponse
     {
         try {
@@ -79,6 +130,13 @@ class ChampionshipController extends Controller
         }
     }
 
+    /**
+     * Atualiza um campeonato existente.
+     * 
+     * @param UpdateChampionshipRequest $request Request validado
+     * @param int $id ID do campeonato
+     * @return JsonResponse Resposta com status 201 ou erro
+     */
     public function update(UpdateChampionshipRequest $request, int $id): JsonResponse
     {
         try {

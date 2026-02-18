@@ -8,18 +8,41 @@ use App\Models\Fixture;
 use App\Services\BaseService;
 use Exception;
 
+/**
+ * Serviço responsável pela lógica de negócio de Campeonatos.
+ * 
+ * Gerencia operações CRUD de campeonatos, incluindo:
+ * - Criação de campeonatos com geração automática de fixtures
+ * - Consulta e listagem de campeonatos
+ * - Atualização e exclusão (com cascade para dados relacionados)
+ */
 class ChampionshipService extends BaseService implements ChampionshipContract
 {
-
+    /**
+     * Relacionamentos a serem carregados por padrão.
+     * 
+     * @var array
+     */
     protected array $with = ['teams', 'fixtures'];
 
+    /**
+     * Construtor do serviço.
+     * Inicializa com o model Championship.
+     */
     public function __construct()
     {
         parent::__construct(new Championship());
     }
 
     /**
-     * @throws Exception
+     * Cria um novo campeonato e gera automaticamente as fixtures.
+     * 
+     * Utiliza o RoundRobinScheduler para criar o calendário de jogos
+     * baseado no número de rodadas configurado.
+     * 
+     * @param array $data Dados do campeonato (name, rounds, teams[], etc)
+     * @return bool Sucesso da operação
+     * @throws Exception Em caso de erro na criação
      */
     public function create($data): bool
     {
@@ -29,6 +52,12 @@ class ChampionshipService extends BaseService implements ChampionshipContract
         return true;
     }
 
+    /**
+     * Busca um campeonato pelo ID.
+     * 
+     * @param int $championship_id ID do campeonato
+     * @return Championship|null Campeonato encontrado ou null
+     */
     public function find(int $championship_id)
     {
         $championship = $this->model::query()
@@ -40,7 +69,14 @@ class ChampionshipService extends BaseService implements ChampionshipContract
     }
 
     /**
-     * @throws Exception
+     * Busca um campeonato pelo nome (formato slug).
+     * 
+     * Converte hífens para espaços para match com o banco.
+     * Exemplo: "copa-do-mundo" -> "copa do mundo"
+     * 
+     * @param string $name Nome do campeonato em formato slug
+     * @return Championship Campeonato encontrado
+     * @throws Exception Quando o campeonato não é encontrado
      */
     public function findByName(string $name)
     {
@@ -57,7 +93,13 @@ class ChampionshipService extends BaseService implements ChampionshipContract
     }
 
     /**
-     * @throws Exception
+     * Retorna todos os campeonatos com seus prêmios.
+     * 
+     * Inclui o relacionamento com awards e o time campeão
+     * para exibição na listagem.
+     * 
+     * @return \Illuminate\Database\Eloquent\Collection Lista de campeonatos
+     * @throws Exception Quando nenhum campeonato é encontrado
      */
     public
     function all()
@@ -85,7 +127,18 @@ class ChampionshipService extends BaseService implements ChampionshipContract
     }
 
     /**
-     * @throws Exception
+     * Remove um campeonato e todos os dados relacionados.
+     * 
+     * Operação em cascade:
+     * 1. Deleta gols das partidas
+     * 2. Deleta avaliações de jogadores
+     * 3. Deleta premiações
+     * 4. Deleta partidas (fixtures)
+     * 5. Deleta o campeonato
+     * 
+     * @param int $championship_id ID do campeonato
+     * @return bool Sucesso da operação
+     * @throws Exception Quando o campeonato não é encontrado
      */
     public
     function delete(int $championship_id): bool

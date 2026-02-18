@@ -10,13 +10,34 @@ use Exception;
 use Illuminate\Support\Facades\DB;
 use function PHPUnit\Framework\isNull;
 
+/**
+ * Serviço responsável pela lógica de negócio de Jogadores.
+ * 
+ * Gerencia operações CRUD de jogadores, incluindo:
+ * - Criação de jogadores com associação a times
+ * - Consulta de estatísticas (gols, assistências, prêmios)
+ * - Transferência entre times
+ */
 class PlayerService extends BaseService implements PlayerContract
 {
+    /**
+     * Construtor do serviço.
+     * Inicializa com o model Player.
+     */
     public function __construct()
     {
         parent::__construct(new Player());
     }
 
+    /**
+     * Cria um novo jogador e o associa a um time.
+     * 
+     * Cria o registro do jogador e a entrada na tabela pivot
+     * team_player com current_team = true.
+     * 
+     * @param array $data Dados do jogador (name, team_id)
+     * @return bool Sucesso da operação
+     */
     public function create($data): bool
     {
         $player = $this->model::create($data);
@@ -31,9 +52,13 @@ class PlayerService extends BaseService implements PlayerContract
     }
 
     /**
-     * @throws Exception
-     *
-     * return data from a especific player
+     * Busca um jogador pelo ID com suas estatísticas completas.
+     * 
+     * Retorna gols, assistências e prêmios individuais.
+     * 
+     * @param int $id ID do jogador
+     * @return \Illuminate\Support\Collection Dados do jogador
+     * @throws Exception Quando não encontrado
      */
     public function find(int $id)
     {

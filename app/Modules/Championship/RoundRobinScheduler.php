@@ -1,9 +1,42 @@
 <?php
 
 namespace App\Modules\Championship;
+
+/**
+ * Gerador de calendário de jogos no formato Round Robin.
+ * 
+ * O algoritmo Round Robin garante que todos os times joguem
+ * entre si o número de vezes especificado (rodadas/turnos).
+ * 
+ * Características:
+ * - Alternância de mando de campo entre rodadas pares e ímpares
+ * - Randomização dos confrontos e ordem dos jogos
+ * - Suporte a múltiplas rodadas (turnos e returno)
+ * 
+ * Uso:
+ * ```php
+ * $scheduler = new RoundRobinScheduler();
+ * $schedule = $scheduler
+ *     ->setTeams([1, 2, 3, 4])
+ *     ->shuffle()
+ *     ->setRounds(2)
+ *     ->build();
+ * ```
+ */
 class RoundRobinScheduler
 {
+    /**
+     * Lista de IDs dos times participantes.
+     * 
+     * @var array
+     */
     private array $teams = [];
+
+    /**
+     * Número de rodadas/turnos do campeonato.
+     * 
+     * @var int
+     */
     private int $rounds = 1;
 
     /**
@@ -34,10 +67,15 @@ class RoundRobinScheduler
     }
 
     /**
-     * Gera os jogos conforme as regras especificadas:
+     * Gera o calendário completo de jogos.
+     * 
+     * Regras:
      * - Cada par de times se enfrenta em todas as rodadas
-     * - Nas rodadas pares, inverte mando de campo
-     * - Na última rodada (se ímpar e rounds > 1), NÃO gera fixtures (será gerado depois baseado em resultados)
+     * - Nas rodadas pares, inverte o mando de campo
+     * - Na última rodada (ímpar e rounds > 1), NÃO gera fixtures
+     *   (será gerado depois baseado em resultados para playoffs)
+     * 
+     * @return array Array associativo [rodada => [[home_id, away_id], ...]]
      */
     public function build(): array
     {
@@ -103,7 +141,13 @@ class RoundRobinScheduler
     }
     
     /**
-     * Gera uma chave única para um confronto entre dois times
+     * Gera uma chave única para um confronto entre dois times.
+     * 
+     * A chave é ordenada para garantir que A vs B = B vs A.
+     * 
+     * @param int $teamA ID do primeiro time
+     * @param int $teamB ID do segundo time
+     * @return string Chave no formato "id_vs_id"
      */
     private function getMatchupKey($teamA, $teamB): string
     {

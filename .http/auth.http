@@ -1,0 +1,26 @@
+### Authentication Endpoints
+
+### Login
+POST {{host}}/login
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "email": "usuario@example.com",
+  "password": "password123"
+}
+
+###
+
+### Logout (requer autenticação)
+POST {{host}}/logout
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+###
+
+### Get Authenticated User
+GET {{host}}/api/user
+Accept: {{accept}}
+
+###

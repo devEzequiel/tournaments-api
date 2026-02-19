@@ -1,0 +1,17 @@
+# Arquivos privados (se usar tokens/senhas reais)
+*.private.http
+*.local.http
+*-private.http
+*-local.http
+
+# Ambiente local customizado
+environment-local.http
+.env.http
+
+# Tokens e credenciais
+tokens.http
+credentials.http
+
+# Respostas salvas
+*.response.http
+responses/

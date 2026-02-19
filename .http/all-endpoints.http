@@ -1,0 +1,97 @@
+# Tournaments API - All Endpoints
+
+Este arquivo contém referências a todos os arquivos de teste HTTP.
+
+## Variáveis de Ambiente
+@import environment.http
+
+---
+
+## 1. Autenticação
+@import auth.http
+
+---
+
+## 2. Utilitários
+@import utils.http
+
+---
+
+## 3. Times
+@import teams.http
+
+---
+
+## 4. Jogadores
+@import players.http
+
+---
+
+## 5. Campeonatos
+@import championships.http
+
+---
+
+## 6. Analytics de Campeonatos
+@import championship-analytics.http
+
+---
+
+## 7. Partidas (Fixtures)
+@import fixtures.http
+
+---
+
+## Como usar
+
+1. Use os arquivos individuais para testar módulos específicos
+2. Ou use este arquivo para ter acesso a todos os endpoints em um só lugar
+3. Veja README.md para mais informações sobre o fluxo de teste
+
+## Resumo de Endpoints
+
+### Autenticação
+- POST /login
+- POST /logout
+- GET /api/user
+
+### Utils
+- GET /api/utils/check
+
+### Teams
+- GET /api/team/
+- GET /api/team/{id}/detail
+- GET /api/team/{id}/current
+- POST /api/team
+- PUT /api/team/{id}
+- DELETE /api/team/{id}
+
+### Players
+- GET /api/player
+- GET /api/player/{id}
+- GET /api/players/analytic
+- POST /api/player
+- PUT /api/player/change-team
+- DELETE /api/player/{id}
+
+### Championships
+- GET /api/championship/{id}
+- GET /api/championship/{id}/fixtures
+- GET /api/championship/{id}/awards
+- POST /api/championship
+- PUT /api/championship/{id}
+- POST /api/championship/{id}/generate-final-round
+- DELETE /api/championship/{id}
+
+### Championship Analytics
+- GET /api/championship/standings/{id}
+- GET /api/championship/players-stats/{id}
+- GET /api/championship/team-stats/{id}
+- GET /api/championship/table-data/{id}
+- POST /api/championship/clashes
+
+### Fixtures
+- GET /api/fixtures/{id}
+- GET /api/fixtures/{id}/basic
+- GET /api/fixtures/{id}/unplayed
+- PUT /api/fixtures/

@@ -1,0 +1,65 @@
+### Championships Endpoints
+
+### Get championship detail
+GET {{host}}/api/championship/{{championshipId}}
+Accept: {{accept}}
+
+###
+
+### Get championship fixtures
+GET {{host}}/api/championship/{{championshipId}}/fixtures
+Accept: {{accept}}
+
+###
+
+### Get championship awards
+GET {{host}}/api/championship/{{championshipId}}/awards
+Accept: {{accept}}
+
+###
+
+### Create championship
+POST {{host}}/api/championship
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "name": "Campeonato Brasileiro 2024",
+  "season": "2024",
+  "start_date": "2024-04-01",
+  "end_date": "2024-12-15",
+  "teams": [1, 2, 3, 4, 5, 6, 7, 8]
+}
+
+###
+
+### Update championship
+PUT {{host}}/api/championship/{{championshipId}}
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "name": "Campeonato Brasileiro 2024 - Serie A",
+  "season": "2024",
+  "start_date": "2024-04-01",
+  "end_date": "2024-12-20"
+}
+
+###
+
+### Generate final round
+POST {{host}}/api/championship/{{championshipId}}/generate-final-round
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "teams": [1, 2, 3, 4]
+}
+
+###
+
+### Delete championship
+DELETE {{host}}/api/championship/{{championshipId}}
+Accept: {{accept}}
+
+###

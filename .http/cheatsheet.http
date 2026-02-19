@@ -1,0 +1,290 @@
+# 🚀 API Cheatsheet - Comandos Rápidos
+
+Copie e cole os comandos mais usados!
+
+---
+
+## ⚡ Variables (customize aqui)
+@host = http://localhost
+@contentType = application/json
+@accept = application/json
+
+# Atualize estes IDs após criar recursos
+@teamId = 1
+@playerId = 1
+@championshipId = 1
+@fixtureId = 1
+
+---
+
+## 🔍 READ Operations (GET)
+
+### Health Check
+GET {{host}}/api/utils/check
+
+### List Teams
+GET {{host}}/api/team/
+
+### List Players
+GET {{host}}/api/player
+
+### Team Detail
+GET {{host}}/api/team/{{teamId}}/detail
+
+### Team Players
+GET {{host}}/api/team/{{teamId}}/current
+
+### Player Detail
+GET {{host}}/api/player/{{playerId}}
+
+### Championship Detail
+GET {{host}}/api/championship/{{championshipId}}
+
+### Championship Fixtures
+GET {{host}}/api/championship/{{championshipId}}/fixtures
+
+### Unplayed Fixtures
+GET {{host}}/api/fixtures/{{championshipId}}/unplayed
+
+### Standings
+GET {{host}}/api/championship/standings/{{championshipId}}
+
+### Players Stats
+GET {{host}}/api/championship/players-stats/{{championshipId}}
+
+### Team Stats
+GET {{host}}/api/championship/team-stats/{{championshipId}}
+
+### Players Analytics
+GET {{host}}/api/players/analytic
+
+### Championship Awards
+GET {{host}}/api/championship/{{championshipId}}/awards
+
+---
+
+## ✍️ CREATE Operations (POST)
+
+### Create Team
+POST {{host}}/api/team
+Content-Type: {{contentType}}
+
+{
+  "name": "Nome do Time",
+  "logo": "logo.png",
+  "founded": "2020-01-01",
+  "stadium": "Nome do Estádio"
+}
+
+### Create Player
+POST {{host}}/api/player
+Content-Type: {{contentType}}
+
+{
+  "name": "Nome do Jogador",
+  "position": "Atacante",
+  "number": 10,
+  "birth_date": "1995-05-15",
+  "team_id": 1
+}
+
+### Create Championship
+POST {{host}}/api/championship
+Content-Type: {{contentType}}
+
+{
+  "name": "Nome do Campeonato",
+  "season": "2024",
+  "start_date": "2024-04-01",
+  "end_date": "2024-12-15",
+  "teams": [1, 2, 3, 4]
+}
+
+---
+
+## 🔄 UPDATE Operations (PUT)
+
+### Update Team
+PUT {{host}}/api/team/{{teamId}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Nome Atualizado"
+}
+
+### Update Championship
+PUT {{host}}/api/championship/{{championshipId}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Nome Atualizado"
+}
+
+### Change Player Team
+PUT {{host}}/api/player/change-team
+Content-Type: {{contentType}}
+
+{
+  "player_id": 1,
+  "new_team_id": 2,
+  "transfer_date": "2024-01-15"
+}
+
+### Play Match
+PUT {{host}}/api/fixtures/
+Content-Type: {{contentType}}
+
+{
+  "fixture_id": 1,
+  "home_score": 2,
+  "away_score": 1,
+  "played_at": "2024-05-15 20:00:00",
+  "goals": [
+    {"scorer_id": 1, "assist_id": 2, "minute": 15, "pk": false},
+    {"scorer_id": 1, "assist_id": null, "minute": 45, "pk": true},
+    {"scorer_id": 3, "assist_id": 4, "minute": 78, "pk": false}
+  ]
+}
+
+---
+
+## 🗑️ DELETE Operations (DELETE)
+
+### Delete Team
+DELETE {{host}}/api/team/{{teamId}}
+
+### Delete Player
+DELETE {{host}}/api/player/{{playerId}}
+
+### Delete Championship
+DELETE {{host}}/api/championship/{{championshipId}}
+
+---
+
+## 📊 ANALYTICS Operations
+
+### Get Clashes
+POST {{host}}/api/championship/clashes
+Content-Type: {{contentType}}
+
+{
+  "team1_id": 1,
+  "team2_id": 2,
+  "championship_id": 1
+}
+
+### Table Data
+GET {{host}}/api/championship/table-data/{{championshipId}}
+
+---
+
+## 🎯 Common Use Cases
+
+### 1. Quick Test
+GET {{host}}/api/utils/check
+
+### 2. Create Full Team
+# A) Create Team
+POST {{host}}/api/team
+Content-Type: {{contentType}}
+
+{"name": "Time Teste", "logo": "test.png", "founded": "2020-01-01", "stadium": "Estádio"}
+
+# B) Add Players (repeat)
+POST {{host}}/api/player
+Content-Type: {{contentType}}
+
+{"name": "Jogador 1", "position": "Atacante", "number": 9, "birth_date": "1995-01-01", "team_id": 1}
+
+### 3. Create & Start Championship
+# A) Create Championship
+POST {{host}}/api/championship
+Content-Type: {{contentType}}
+
+{"name": "Campeonato 2024", "season": "2024", "start_date": "2024-04-01", "end_date": "2024-12-15", "teams": [1,2,3,4]}
+
+# B) View Fixtures
+GET {{host}}/api/championship/1/fixtures
+
+# C) Play Match
+PUT {{host}}/api/fixtures/
+Content-Type: {{contentType}}
+
+{"fixture_id": 1, "home_score": 2, "away_score": 1, "played_at": "2024-05-15 20:00:00", "goals": [{"scorer_id": 1, "assist_id": 2, "minute": 15, "pk": false}, {"scorer_id": 1, "assist_id": null, "minute": 45, "pk": true}, {"scorer_id": 3, "assist_id": 4, "minute": 78, "pk": false}]}
+
+# D) View Standings
+GET {{host}}/api/championship/standings/1
+
+---
+
+## 💡 Pro Tips
+
+### Keyboard Shortcuts (VS Code + REST Client)
+- `Ctrl+Alt+R` (Mac: `Cmd+Alt+R`) - Send Request
+- `Ctrl+Alt+E` (Mac: `Cmd+Alt+E`) - Switch Environment
+- `Ctrl+Alt+C` (Mac: `Cmd+Alt+C`) - Copy Response
+
+### Quick Copy Templates
+
+#### Minimal Team
+```json
+{"name": "Time X", "logo": "x.png", "founded": "2020-01-01", "stadium": "Estádio X"}
+```
+
+#### Minimal Player
+```json
+{"name": "Jogador X", "position": "Atacante", "number": 10, "birth_date": "1995-01-01", "team_id": 1}
+```
+
+#### Minimal Championship
+```json
+{"name": "Campeonato X", "season": "2024", "start_date": "2024-04-01", "end_date": "2024-12-15", "teams": [1,2,3,4]}
+```
+
+#### Minimal Match (0-0)
+```json
+{"fixture_id": 1, "home_score": 0, "away_score": 0, "played_at": "2024-05-15 20:00:00", "goals": []}
+```
+
+#### Goal Template
+```json
+{"scorer_id": 1, "assist_id": 2, "minute": 45, "pk": false}
+```
+
+---
+
+## 🔧 Troubleshooting
+
+### API Not Responding
+GET {{host}}/api/utils/check
+
+### Check Docker
+```bash
+docker-compose ps
+docker-compose up -d
+```
+
+### View Logs
+```bash
+docker-compose logs -f
+tail -f storage/logs/laravel.log
+```
+
+### Database Issues
+```bash
+docker-compose exec app php artisan migrate:fresh --seed
+```
+
+---
+
+## 📚 Related Files
+
+- **index.http** - Índice completo
+- **quickstart.http** - Setup rápido
+- **README.md** - Documentação completa
+- **complete-flow-example.http** - Fluxo completo passo a passo
+- **validation-tests.http** - Testes de validação
+
+---
+
+**Tip**: Salve este cheatsheet como favorito para acesso rápido!

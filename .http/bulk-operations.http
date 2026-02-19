@@ -1,0 +1,509 @@
+### Bulk Operations and Performance Tests
+
+# Este arquivo contém testes para operações em lote e performance
+
+### 1. Create Multiple Teams in Sequence
+POST {{host}}/api/team
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "name": "Atlético Mineiro",
+  "logo": "atletico_mg.png",
+  "founded": "1908-03-25",
+  "stadium": "Mineirão"
+}
+
+###
+
+POST {{host}}/api/team
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "name": "Internacional",
+  "logo": "internacional.png",
+  "founded": "1909-04-04",
+  "stadium": "Beira-Rio"
+}
+
+###
+
+POST {{host}}/api/team
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "name": "Grêmio",
+  "logo": "gremio.png",
+  "founded": "1903-09-15",
+  "stadium": "Arena do Grêmio"
+}
+
+###
+
+POST {{host}}/api/team
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "name": "Botafogo",
+  "logo": "botafogo.png",
+  "founded": "1894-08-12",
+  "stadium": "Nilton Santos"
+}
+
+###
+
+POST {{host}}/api/team
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "name": "Vasco da Gama",
+  "logo": "vasco.png",
+  "founded": "1898-08-21",
+  "stadium": "São Januário"
+}
+
+###
+
+POST {{host}}/api/team
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "name": "Cruzeiro",
+  "logo": "cruzeiro.png",
+  "founded": "1921-01-02",
+  "stadium": "Mineirão"
+}
+
+###
+
+POST {{host}}/api/team
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "name": "Santos",
+  "logo": "santos.png",
+  "founded": "1912-04-14",
+  "stadium": "Vila Belmiro"
+}
+
+###
+
+POST {{host}}/api/team
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "name": "Athletico Paranaense",
+  "logo": "athletico_pr.png",
+  "founded": "1924-03-26",
+  "stadium": "Arena da Baixada"
+}
+
+###
+
+### 2. Create Multiple Players for Same Team
+POST {{host}}/api/player
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "name": "Pedro",
+  "position": "Atacante",
+  "number": 9,
+  "birth_date": "1997-06-20",
+  "team_id": 1
+}
+
+###
+
+POST {{host}}/api/player
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "name": "Everton Ribeiro",
+  "position": "Meio-campo",
+  "number": 7,
+  "birth_date": "1989-04-10",
+  "team_id": 1
+}
+
+###
+
+POST {{host}}/api/player
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "name": "Filipe Luís",
+  "position": "Lateral",
+  "number": 16,
+  "birth_date": "1985-08-09",
+  "team_id": 1
+}
+
+###
+
+POST {{host}}/api/player
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "name": "Gerson",
+  "position": "Meio-campo",
+  "number": 8,
+  "birth_date": "1997-05-20",
+  "team_id": 1
+}
+
+###
+
+POST {{host}}/api/player
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "name": "Bruno Henrique",
+  "position": "Atacante",
+  "number": 27,
+  "birth_date": "1990-12-30",
+  "team_id": 1
+}
+
+###
+
+### 3. Get All Teams (Performance Test)
+GET {{host}}/api/team/
+Accept: {{accept}}
+
+###
+
+### 4. Get All Players (Performance Test)
+GET {{host}}/api/player
+Accept: {{accept}}
+
+###
+
+### 5. Create Championship with Many Teams (8 teams)
+POST {{host}}/api/championship
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "name": "Copa do Brasil 2024",
+  "season": "2024",
+  "start_date": "2024-03-01",
+  "end_date": "2024-09-30",
+  "teams": [1, 2, 3, 4, 5, 6, 7, 8]
+}
+
+###
+
+### 6. Get All Championship Fixtures (Large Dataset)
+GET {{host}}/api/championship/1/fixtures
+Accept: {{accept}}
+
+###
+
+### 7. Play Multiple Matches in Sequence
+PUT {{host}}/api/fixtures/
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "fixture_id": 1,
+  "home_score": 2,
+  "away_score": 1,
+  "played_at": "2024-04-05 20:00:00",
+  "goals": [
+    {
+      "scorer_id": 1,
+      "assist_id": 2,
+      "minute": 23,
+      "pk": false
+    },
+    {
+      "scorer_id": 3,
+      "assist_id": null,
+      "minute": 55,
+      "pk": true
+    },
+    {
+      "scorer_id": 1,
+      "assist_id": 4,
+      "minute": 89,
+      "pk": false
+    }
+  ]
+}
+
+###
+
+PUT {{host}}/api/fixtures/
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "fixture_id": 2,
+  "home_score": 3,
+  "away_score": 2,
+  "played_at": "2024-04-06 16:00:00",
+  "goals": [
+    {
+      "scorer_id": 5,
+      "assist_id": 6,
+      "minute": 12,
+      "pk": false
+    },
+    {
+      "scorer_id": 7,
+      "assist_id": null,
+      "minute": 34,
+      "pk": false
+    },
+    {
+      "scorer_id": 5,
+      "assist_id": 8,
+      "minute": 56,
+      "pk": false
+    },
+    {
+      "scorer_id": 9,
+      "assist_id": 10,
+      "minute": 67,
+      "pk": false
+    },
+    {
+      "scorer_id": 5,
+      "assist_id": 6,
+      "minute": 90,
+      "pk": false
+    }
+  ]
+}
+
+###
+
+PUT {{host}}/api/fixtures/
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "fixture_id": 3,
+  "home_score": 0,
+  "away_score": 0,
+  "played_at": "2024-04-07 18:00:00",
+  "goals": []
+}
+
+###
+
+PUT {{host}}/api/fixtures/
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "fixture_id": 4,
+  "home_score": 4,
+  "away_score": 3,
+  "played_at": "2024-04-08 20:00:00",
+  "goals": [
+    {
+      "scorer_id": 11,
+      "assist_id": 12,
+      "minute": 5,
+      "pk": false
+    },
+    {
+      "scorer_id": 13,
+      "assist_id": 14,
+      "minute": 18,
+      "pk": false
+    },
+    {
+      "scorer_id": 11,
+      "assist_id": null,
+      "minute": 25,
+      "pk": true
+    },
+    {
+      "scorer_id": 15,
+      "assist_id": 16,
+      "minute": 42,
+      "pk": false
+    },
+    {
+      "scorer_id": 11,
+      "assist_id": 12,
+      "minute": 58,
+      "pk": false
+    },
+    {
+      "scorer_id": 17,
+      "assist_id": null,
+      "minute": 73,
+      "pk": false
+    },
+    {
+      "scorer_id": 11,
+      "assist_id": 18,
+      "minute": 88,
+      "pk": false
+    }
+  ]
+}
+
+###
+
+### 8. Get Championship Stats (Heavy Query)
+GET {{host}}/api/championship/standings/1
+Accept: {{accept}}
+
+###
+
+GET {{host}}/api/championship/players-stats/1
+Accept: {{accept}}
+
+###
+
+GET {{host}}/api/championship/team-stats/1
+Accept: {{accept}}
+
+###
+
+GET {{host}}/api/championship/table-data/1
+Accept: {{accept}}
+
+###
+
+### 9. Player Transfer Test - Change Team Multiple Times
+PUT {{host}}/api/player/change-team
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "player_id": 1,
+  "new_team_id": 2,
+  "transfer_date": "2024-06-01"
+}
+
+###
+
+PUT {{host}}/api/player/change-team
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "player_id": 1,
+  "new_team_id": 3,
+  "transfer_date": "2024-07-15"
+}
+
+###
+
+PUT {{host}}/api/player/change-team
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "player_id": 1,
+  "new_team_id": 1,
+  "transfer_date": "2024-08-20"
+}
+
+###
+
+### 10. Get Player Analytics (After Multiple Transfers)
+GET {{host}}/api/players/analytic
+Accept: {{accept}}
+
+###
+
+### 11. Complex Clashes Query
+POST {{host}}/api/championship/clashes
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "team1_id": 1,
+  "team2_id": 2,
+  "championship_id": 1
+}
+
+###
+
+POST {{host}}/api/championship/clashes
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "team1_id": 3,
+  "team2_id": 4,
+  "championship_id": 1
+}
+
+###
+
+### 12. Get Team with All Relations
+GET {{host}}/api/team/1/detail
+Accept: {{accept}}
+
+###
+
+GET {{host}}/api/team/1/current
+Accept: {{accept}}
+
+###
+
+### 13. Create Championship with All Available Teams
+# Ajuste o array de teams conforme os IDs disponíveis
+POST {{host}}/api/championship
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "name": "Campeonato Brasileiro Série A 2025",
+  "season": "2025",
+  "start_date": "2025-04-01",
+  "end_date": "2025-12-15",
+  "teams": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+}
+
+###
+
+### 14. Stress Test - Match with Many Goals
+PUT {{host}}/api/fixtures/
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "fixture_id": 5,
+  "home_score": 8,
+  "away_score": 7,
+  "played_at": "2024-04-10 20:00:00",
+  "goals": [
+    {"scorer_id": 1, "assist_id": 2, "minute": 5, "pk": false},
+    {"scorer_id": 3, "assist_id": 4, "minute": 12, "pk": false},
+    {"scorer_id": 1, "assist_id": null, "minute": 18, "pk": true},
+    {"scorer_id": 5, "assist_id": 6, "minute": 23, "pk": false},
+    {"scorer_id": 1, "assist_id": 2, "minute": 30, "pk": false},
+    {"scorer_id": 7, "assist_id": null, "minute": 35, "pk": false},
+    {"scorer_id": 1, "assist_id": 8, "minute": 42, "pk": false},
+    {"scorer_id": 9, "assist_id": 10, "minute": 48, "pk": false},
+    {"scorer_id": 1, "assist_id": 2, "minute": 55, "pk": false},
+    {"scorer_id": 11, "assist_id": null, "minute": 61, "pk": true},
+    {"scorer_id": 1, "assist_id": 12, "minute": 68, "pk": false},
+    {"scorer_id": 13, "assist_id": 14, "minute": 73, "pk": false},
+    {"scorer_id": 1, "assist_id": 2, "minute": 79, "pk": false},
+    {"scorer_id": 15, "assist_id": null, "minute": 85, "pk": false},
+    {"scorer_id": 1, "assist_id": 16, "minute": 90, "pk": false}
+  ]
+}
+
+###

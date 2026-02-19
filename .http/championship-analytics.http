@@ -1,0 +1,38 @@
+### Championship Analytics Endpoints
+
+### Get standings
+GET {{host}}/api/championship/standings/{{championshipId}}
+Accept: {{accept}}
+
+###
+
+### Get players stats
+GET {{host}}/api/championship/players-stats/{{championshipId}}
+Accept: {{accept}}
+
+###
+
+### Get team stats
+GET {{host}}/api/championship/team-stats/{{championshipId}}
+Accept: {{accept}}
+
+###
+
+### Get table data
+GET {{host}}/api/championship/table-data/{{championshipId}}
+Accept: {{accept}}
+
+###
+
+### Get clashes
+POST {{host}}/api/championship/clashes
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "team1_id": 1,
+  "team2_id": 2,
+  "championship_id": 1
+}
+
+###

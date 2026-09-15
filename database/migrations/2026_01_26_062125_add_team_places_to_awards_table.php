@@ -34,7 +34,7 @@ return new class extends Migration
             $table->dropForeign(['second_place']);
             $table->dropForeign(['third_place']);
             $table->dropForeign(['golden_glove']);
-            
+
             $table->dropColumn(['first_place', 'second_place', 'third_place', 'golden_glove']);
         });
     }

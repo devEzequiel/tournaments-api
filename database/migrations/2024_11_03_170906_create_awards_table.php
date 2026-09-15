@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      *
@@ -16,12 +17,12 @@ return new class extends Migration {
             $table->id();
             $table->unsignedBigInteger('championship_id');
 
-            $table->unsignedBigInteger('best_player'); //player of the championship: biggest rate
-            $table->unsignedBigInteger('golden_boot'); //most goals
-            $table->unsignedBigInteger('playmaker'); //most assists
+            $table->unsignedBigInteger('best_player'); // player of the championship: biggest rate
+            $table->unsignedBigInteger('golden_boot'); // most goals
+            $table->unsignedBigInteger('playmaker'); // most assists
 
             $table->foreign('championship_id')->references('id')->on('championships')
-            ->onDelete('cascade');
+                ->onDelete('cascade');
 
             $table->foreign('best_player')->references('id')->on('players');
             $table->foreign('golden_boot')->references('id')->on('players');

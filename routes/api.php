@@ -8,18 +8,18 @@ use Illuminate\Support\Facades\Route;
 | API Routes
 |--------------------------------------------------------------------------
 |
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
+| Consumed only by this app's own Vue frontend, which authenticates with the
+| session cookie via Sanctum's stateful middleware (see bootstrap/app.php).
+| Everything in here requires an authenticated user — there are no public
+| endpoints.
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', fn (Request $request) => $request->user());
 
-require_once('api/teams.php');
-require_once('api/players.php');
-require_once('api/utils.php');
-require_once('api/championship.php');
-require_once ('api/fixture.php');
+    require __DIR__.'/api/teams.php';
+    require __DIR__.'/api/players.php';
+    require __DIR__.'/api/championship.php';
+    require __DIR__.'/api/fixture.php';
+});

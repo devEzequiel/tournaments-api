@@ -8,8 +8,6 @@ class UpdatePlayerRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
-     *
-     * @return bool
      */
     public function authorize(): bool
     {
@@ -24,9 +22,9 @@ class UpdatePlayerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['string', 'required', 'unique:players,name,' . $this->get('player_id'). ',id'],
+            'name' => ['string', 'required', 'unique:players,name,'.$this->get('player_id').',id'],
             'team_id' => ['int', 'required', 'exists:teams,id'],
-            'gk' => ['boolean', 'nullable', 'in:0,1']
+            'gk' => ['boolean', 'nullable', 'in:0,1'],
         ];
     }
 }

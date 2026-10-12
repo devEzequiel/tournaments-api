@@ -4,13 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Model que representa as premiações de um campeonato.
- * 
+ *
  * Armazena os vencedores de cada categoria: classificação final
  * (1º, 2º, 3º lugar) e premiações individuais.
- * 
+ *
  * @property int $id Identificador único
  * @property int $championship_id ID do campeonato
  * @property int|null $first_place ID do time campeão
@@ -25,6 +26,8 @@ class Award extends Model
 {
     use HasFactory;
 
+    public $timestamps = false;
+
     protected $fillable = [
         'championship_id',
         'first_place',
@@ -36,37 +39,37 @@ class Award extends Model
         'playmaker',
     ];
 
-    public function getBestPlayer(): \Illuminate\Database\Eloquent\Relations\BelongsTo
-    {
-        return $this->belongsTo(Player::class, 'best_player', 'id');
-    }
-    
-    public function bestPlayer(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function getBestPlayer(): BelongsTo
     {
         return $this->belongsTo(Player::class, 'best_player', 'id');
     }
 
-    public function getGoldenBoot(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function bestPlayer(): BelongsTo
     {
-        return $this->belongsTo(Player::class, 'golden_boot', 'id');
+        return $this->belongsTo(Player::class, 'best_player', 'id');
     }
-    
-    public function goldenBoot(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+
+    public function getGoldenBoot(): BelongsTo
     {
         return $this->belongsTo(Player::class, 'golden_boot', 'id');
     }
 
-    public function getGoldenGlove(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function goldenBoot(): BelongsTo
+    {
+        return $this->belongsTo(Player::class, 'golden_boot', 'id');
+    }
+
+    public function getGoldenGlove(): BelongsTo
     {
         return $this->belongsTo(Player::class, 'golden_glove', 'id');
     }
 
-    public function getPlaymaker(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function getPlaymaker(): BelongsTo
     {
         return $this->belongsTo(Player::class, 'playmaker', 'id');
     }
-    
-    public function playmaker(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+
+    public function playmaker(): BelongsTo
     {
         return $this->belongsTo(Player::class, 'playmaker', 'id');
     }

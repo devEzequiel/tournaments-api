@@ -8,9 +8,7 @@ use Illuminate\Http\Request;
 
 class ChampionshipAnalyticController extends Controller
 {
-    public function __construct(protected ChampionshipAnalyticService $service)
-    {
-    }
+    public function __construct(protected ChampionshipAnalyticService $service) {}
 
     public function getStandings(int $champ_id): JsonResponse
     {

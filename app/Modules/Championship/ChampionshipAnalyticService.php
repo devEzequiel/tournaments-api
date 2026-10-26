@@ -2,7 +2,6 @@
 
 namespace App\Modules\Championship;
 
-use App\Models\BaseModel;
 use App\Models\Championship;
 use App\Models\Fixture;
 use App\Models\Player;
@@ -59,9 +58,9 @@ class ChampionshipAnalyticService extends BaseService
             ')
                     ->from('fixtures')
                     ->where('championship_id', $championship_id)
-                    ->where(function($q) {
+                    ->where(function ($q) {
                         $q->where('is_playoff', false)
-                          ->orWhereNull('is_playoff');
+                            ->orWhereNull('is_playoff');
                     })
                     ->groupBy('home_team_id')
                     ->unionAll(
@@ -81,9 +80,9 @@ class ChampionshipAnalyticService extends BaseService
                     ')
                             ->from('fixtures')
                             ->where('championship_id', $championship_id)
-                            ->where(function($q) {
+                            ->where(function ($q) {
                                 $q->where('is_playoff', false)
-                                  ->orWhereNull('is_playoff');
+                                    ->orWhereNull('is_playoff');
                             })
                             ->groupBy('away_team_id')
                     );
@@ -109,7 +108,7 @@ class ChampionshipAnalyticService extends BaseService
     public function getCrossedResults(int $championship_id)
     {
         $championship = Championship::find($championship_id);
-        
+
         $results = Fixture::query()
             ->selectRaw('
             LEAST(home_team_id, away_team_id) AS team1_id,
@@ -133,75 +132,79 @@ class ChampionshipAnalyticService extends BaseService
         $finalRoundPredictions = [];
         if ($championship && $championship->rounds % 2 === 1 && $championship->rounds > 1) {
             $finalRound = $championship->rounds;
-            
+
             $finalRoundExists = Fixture::where('championship_id', $championship_id)
                 ->where('round_number', $finalRound)
                 ->exists();
-            
-            if (!$finalRoundExists) {
+
+            if (! $finalRoundExists) {
                 foreach ($teams as $team1Id => $team1Name) {
                     foreach ($teams as $team2Id => $team2Name) {
-                        if ($team1Id >= $team2Id) continue;
-                        
+                        if ($team1Id >= $team2Id) {
+                            continue;
+                        }
+
                         $previousMatches = Fixture::where('championship_id', $championship_id)
                             ->where('round_number', '<', $finalRound)
                             ->where(function ($query) use ($team1Id, $team2Id) {
-                            $query->where(function ($q) use ($team1Id, $team2Id) {
-                                $q->where('home_team_id', $team1Id)
-                                  ->where('away_team_id', $team2Id);
-                            })->orWhere(function ($q) use ($team1Id, $team2Id) {
-                                $q->where('home_team_id', $team2Id)
-                                  ->where('away_team_id', $team1Id);
-                            });
-                        })
-                        ->where('is_played', true)
-                        ->get();
+                                $query->where(function ($q) use ($team1Id, $team2Id) {
+                                    $q->where('home_team_id', $team1Id)
+                                        ->where('away_team_id', $team2Id);
+                                })->orWhere(function ($q) use ($team1Id, $team2Id) {
+                                    $q->where('home_team_id', $team2Id)
+                                        ->where('away_team_id', $team1Id);
+                                });
+                            })
+                            ->where('is_played', true)
+                            ->get();
 
-                    if ($previousMatches->isEmpty()) continue;
+                        if ($previousMatches->isEmpty()) {
+                            continue;
+                        }
 
-                    $team1Wins = 0;
-                    $team2Wins = 0;
-                    $team1Goals = 0;
-                    $team2Goals = 0;
-                    $team1AwayGoals = 0;
-                    $team2AwayGoals = 0;
+                        $team1Wins = 0;
+                        $team2Wins = 0;
+                        $team1Goals = 0;
+                        $team2Goals = 0;
+                        $team1AwayGoals = 0;
+                        $team2AwayGoals = 0;
 
-                    foreach ($previousMatches as $match) {
-                        if ($match->home_team_id === $team1Id) {
-                            $team1Goals += $match->home_goals;
-                            $team2Goals += $match->away_goals;
-                            $team2AwayGoals += $match->away_goals;
-                            
-                            if ($match->home_goals > $match->away_goals) {
-                                $team1Wins++;
-                            } elseif ($match->home_goals < $match->away_goals) {
-                                $team2Wins++;
-                            }
-                        } else {
-                            $team2Goals += $match->home_goals;
-                            $team1Goals += $match->away_goals;
-                            $team1AwayGoals += $match->away_goals;
-                            
-                            if ($match->home_goals > $match->away_goals) {
-                                $team2Wins++;
-                            } elseif ($match->home_goals < $match->away_goals) {
-                                $team1Wins++;
+                        foreach ($previousMatches as $match) {
+                            if ($match->home_team_id === $team1Id) {
+                                $team1Goals += $match->home_goals;
+                                $team2Goals += $match->away_goals;
+                                $team2AwayGoals += $match->away_goals;
+
+                                if ($match->home_goals > $match->away_goals) {
+                                    $team1Wins++;
+                                } elseif ($match->home_goals < $match->away_goals) {
+                                    $team2Wins++;
+                                }
+                            } else {
+                                $team2Goals += $match->home_goals;
+                                $team1Goals += $match->away_goals;
+                                $team1AwayGoals += $match->away_goals;
+
+                                if ($match->home_goals > $match->away_goals) {
+                                    $team2Wins++;
+                                } elseif ($match->home_goals < $match->away_goals) {
+                                    $team1Wins++;
+                                }
                             }
                         }
-                    }
 
-                    $homeTeamId = $team1Id;
-                    if ($team2Wins > $team1Wins) {
-                        $homeTeamId = $team2Id;
-                    } elseif ($team1Wins === $team2Wins) {
-                        if ($team2Goals > $team1Goals) {
+                        $homeTeamId = $team1Id;
+                        if ($team2Wins > $team1Wins) {
                             $homeTeamId = $team2Id;
-                        } elseif ($team1Goals === $team2Goals && $team2AwayGoals > $team1AwayGoals) {
-                            $homeTeamId = $team2Id;
+                        } elseif ($team1Wins === $team2Wins) {
+                            if ($team2Goals > $team1Goals) {
+                                $homeTeamId = $team2Id;
+                            } elseif ($team1Goals === $team2Goals && $team2AwayGoals > $team1AwayGoals) {
+                                $homeTeamId = $team2Id;
+                            }
                         }
-                    }
 
-                    $finalRoundPredictions[$team1Id . '-' . $team2Id] = $homeTeamId;
+                        $finalRoundPredictions[$team1Id.'-'.$team2Id] = $homeTeamId;
                     }
                 }
             }
@@ -215,6 +218,7 @@ class ChampionshipAnalyticService extends BaseService
             foreach ($teams as $team_id_col => $team_name_col) {
                 if ($team_id_row === $team_id_col) {
                     $row[$team_name_col] = null;
+
                     continue;
                 }
 
@@ -229,13 +233,13 @@ class ChampionshipAnalyticService extends BaseService
                     } else {
                         $scoreDisplay = "{$match->team2_goals}-{$match->team1_goals}";
                     }
-                    
+
                     if ($match->has_playoff) {
                         $scoreDisplay .= ' 🏆';
                     }
-                    
-                    if (!empty($finalRoundPredictions)) {
-                        $key1 = min($team_id_row, $team_id_col) . '-' . max($team_id_row, $team_id_col);
+
+                    if (! empty($finalRoundPredictions)) {
+                        $key1 = min($team_id_row, $team_id_col).'-'.max($team_id_row, $team_id_col);
                         if (isset($finalRoundPredictions[$key1])) {
                             $homeTeam = $finalRoundPredictions[$key1];
                             if ($homeTeam === $team_id_row) {
@@ -243,10 +247,10 @@ class ChampionshipAnalyticService extends BaseService
                             }
                         }
                     }
-                    
+
                     $row[$team_name_col] = $scoreDisplay;
                 } else {
-                    $row[$team_name_col] = "0-0";
+                    $row[$team_name_col] = '0-0';
                 }
             }
 
@@ -308,7 +312,7 @@ class ChampionshipAnalyticService extends BaseService
             }
 
             // Preencher gols como null caso o jogo ainda não tenha sido realizado
-            if (!$clash->is_played) {
+            if (! $clash->is_played) {
                 $clash->home_goals = null;
                 $clash->away_goals = null;
             }
@@ -322,14 +326,14 @@ class ChampionshipAnalyticService extends BaseService
         // Se for campeonato com rodadas ímpares, adicionar confronto projetado para rodada final
         if ($championship && $championship->rounds % 2 === 1 && $championship->rounds > 1) {
             $finalRound = $championship->rounds;
-            
+
             // Verifica se já existe confronto na rodada final
             $hasFinalRound = $clashes->contains(function ($clash) use ($finalRound) {
                 return $clash->round_number === $finalRound;
             });
 
             // Se não existe, calcular quem jogaria em casa
-            if (!$hasFinalRound) {
+            if (! $hasFinalRound) {
                 // Calcular estatísticas para determinar mando de campo
                 $team1Wins = 0;
                 $team2Wins = 0;
@@ -344,7 +348,7 @@ class ChampionshipAnalyticService extends BaseService
                             $team1Goals += $clash->home_goals;
                             $team2Goals += $clash->away_goals;
                             $team2AwayGoals += $clash->away_goals;
-                            
+
                             if ($clash->home_goals > $clash->away_goals) {
                                 $team1Wins++;
                             } elseif ($clash->home_goals < $clash->away_goals) {
@@ -354,7 +358,7 @@ class ChampionshipAnalyticService extends BaseService
                             $team2Goals += $clash->home_goals;
                             $team1Goals += $clash->away_goals;
                             $team1AwayGoals += $clash->away_goals;
-                            
+
                             if ($clash->home_goals > $clash->away_goals) {
                                 $team2Wins++;
                             } elseif ($clash->home_goals < $clash->away_goals) {
@@ -366,7 +370,7 @@ class ChampionshipAnalyticService extends BaseService
 
                 // Determina quem jogaria em casa usando os mesmos critérios do FinalRoundGeneratorService
                 $homeTeamId = $team1_id;
-                
+
                 if ($team2Wins > $team1Wins) {
                     $homeTeamId = $team2_id;
                 } elseif ($team1Wins === $team2Wins) {
@@ -380,7 +384,7 @@ class ChampionshipAnalyticService extends BaseService
                 }
 
                 // Adiciona confronto projetado
-                $projectedMatch = new \stdClass();
+                $projectedMatch = new \stdClass;
                 $projectedMatch->home_team_id = $homeTeamId;
                 $projectedMatch->away_team_id = $homeTeamId === $team1_id ? $team2_id : $team1_id;
                 $projectedMatch->home_team = $homeTeamId === $team1_id ? $team1->name : $team2->name;
@@ -512,7 +516,7 @@ class ChampionshipAnalyticService extends BaseService
 
         return [
             'players' => $players,
-            'awards' => $awards
+            'awards' => $awards,
         ];
     }
 
@@ -550,9 +554,9 @@ class ChampionshipAnalyticService extends BaseService
                     ->where(function ($query) {
                         $query->where('team_player.current_team', true)
                             ->orWhere(function ($subQuery) {
-                            $query->whereColumn('team_player.left_at', '>=', 'fixtures.played_at')
-                                ->whereColumn('team_player.joined_at', '<=', 'fixtures.played_at');
-                        });
+                                $subQuery->whereColumn('team_player.left_at', '>=', 'fixtures.played_at')
+                                    ->whereColumn('team_player.joined_at', '<=', 'fixtures.played_at');
+                            });
                     });
             })
             ->leftJoin('teams', 'teams.id', '=', 'team_player.team_id')
@@ -580,7 +584,7 @@ class ChampionshipAnalyticService extends BaseService
                     'total_goals' => $row->total_goals,
                     'total_assists' => $row->total_assists,
                 ];
-            })->toArray()
+            })->toArray(),
         ];
 
         return $teamData;

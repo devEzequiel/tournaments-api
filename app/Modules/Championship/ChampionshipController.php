@@ -5,12 +5,14 @@ namespace App\Modules\Championship;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Championship\CreateChampionshipRequest;
 use App\Http\Requests\Championship\UpdateChampionshipRequest;
+use App\Models\Award;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Inertia\Response;
 
 /**
  * Controller responsável pelas operações de Campeonato.
- * 
+ *
  * Gerencia requisições HTTP para:
  * - Listagem e visualização de campeonatos (Inertia)
  * - API RESTful para CRUD de campeonatos
@@ -20,20 +22,18 @@ class ChampionshipController extends Controller
 {
     /**
      * Construtor com injeção de dependência do serviço.
-     * 
-     * @param ChampionshipService $service Serviço de campeonatos
+     *
+     * @param  ChampionshipService  $service  Serviço de campeonatos
      */
-    public function __construct(protected ChampionshipService $service)
-    {
-    }
+    public function __construct(protected ChampionshipService $service) {}
 
     /**
      * Exibe a página de listagem de campeonatos.
-     * 
+     *
      * Renderiza via Inertia.js a view Championships/Index
      * com todos os campeonatos disponíveis.
-     * 
-     * @return \Inertia\Response
+     *
+     * @return Response
      */
     public function index()
     {
@@ -52,10 +52,10 @@ class ChampionshipController extends Controller
 
     /**
      * Cria um novo campeonato.
-     * 
+     *
      * Recebe dados validados e cria o campeonato com suas fixtures.
-     * 
-     * @param CreateChampionshipRequest $request Request validado
+     *
+     * @param  CreateChampionshipRequest  $request  Request validado
      * @return JsonResponse Resposta com status 201 ou erro
      */
     public function store(CreateChampionshipRequest $request): JsonResponse
@@ -63,9 +63,12 @@ class ChampionshipController extends Controller
         try {
             $data = $request->validated();
 
-            $this->service->create($data);
+            $championship = $this->service->create($data);
 
-            return $this->responseCreated('Campeonato adicionado');
+            return response()->json([
+                'message' => 'Campeonato adicionado',
+                'data' => $championship,
+            ], 201);
         } catch (Exception $e) {
             return $this->responseUnprocessableEntity($e->getMessage());
         }
@@ -73,11 +76,11 @@ class ChampionshipController extends Controller
 
     /**
      * Exibe a página de detalhes de um campeonato.
-     * 
+     *
      * Busca o campeonato pelo nome (slug) e renderiza via Inertia.
-     * 
-     * @param string $name Nome do campeonato em formato slug
-     * @return \Inertia\Response
+     *
+     * @param  string  $name  Nome do campeonato em formato slug
+     * @return Response
      */
     public function show(string $name)
     {
@@ -96,8 +99,8 @@ class ChampionshipController extends Controller
 
     /**
      * Retorna os detalhes de um campeonato via API.
-     * 
-     * @param int $id ID do campeonato
+     *
+     * @param  int  $id  ID do campeonato
      * @return JsonResponse Dados do campeonato
      */
     public function detail(int $id)
@@ -113,10 +116,10 @@ class ChampionshipController extends Controller
 
     /**
      * Retorna as fixtures de um campeonato via API.
-     * 
+     *
      * Lista todas as partidas ordenadas por rodada e número do jogo.
-     * 
-     * @param int $id ID do campeonato
+     *
+     * @param  int  $id  ID do campeonato
      * @return JsonResponse Lista de fixtures
      */
     public function getFixtures(int $id): JsonResponse
@@ -132,9 +135,9 @@ class ChampionshipController extends Controller
 
     /**
      * Atualiza um campeonato existente.
-     * 
-     * @param UpdateChampionshipRequest $request Request validado
-     * @param int $id ID do campeonato
+     *
+     * @param  UpdateChampionshipRequest  $request  Request validado
+     * @param  int  $id  ID do campeonato
      * @return JsonResponse Resposta com status 201 ou erro
      */
     public function update(UpdateChampionshipRequest $request, int $id): JsonResponse
@@ -156,64 +159,64 @@ class ChampionshipController extends Controller
             $this->service->delete($id);
 
             return $this->responseAccepted();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->responseUnprocessableEntity($e->getMessage());
         }
     }
-    
+
     public function generateFinalRound(int $id): JsonResponse
     {
         try {
             FinalRoundGeneratorService::generateFinalRound($id);
-            
+
             return $this->responseCreated('Rodada final gerada com sucesso');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->responseUnprocessableEntity($e->getMessage());
         }
     }
-    
+
     public function getAwards(int $championship_id): JsonResponse
     {
         try {
-            $award = \App\Models\Award::where('championship_id', $championship_id)
+            $award = Award::where('championship_id', $championship_id)
                 ->with(['bestPlayer', 'goldenBoot', 'playmaker'])
                 ->first();
-            
-            if (!$award) {
+
+            if (! $award) {
                 return $this->responseOk([]);
             }
-            
+
             $awards = [];
-            
+
             // The Best (melhor jogador)
             if ($award->best_player && $award->bestPlayer) {
                 $awards[] = [
-                    'id' => $award->id . '_best',
+                    'id' => $award->id.'_best',
                     'type' => 'the_best',
                     'player_name' => $award->bestPlayer->name,
                 ];
             }
-            
+
             // Artilheiro
             if ($award->golden_boot && $award->goldenBoot) {
                 $awards[] = [
-                    'id' => $award->id . '_scorer',
+                    'id' => $award->id.'_scorer',
                     'type' => 'top_scorer',
                     'player_name' => $award->goldenBoot->name,
                 ];
             }
-            
+
             // Playmaker (melhor assistente)
             if ($award->playmaker && $award->playmaker) {
                 $awards[] = [
-                    'id' => $award->id . '_playmaker',
+                    'id' => $award->id.'_playmaker',
                     'type' => 'playmaker',
                     'player_name' => $award->playmaker->name,
                 ];
             }
-            
+
             return $this->responseOk($awards);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->responseUnprocessableEntity($e->getMessage());
         }
     }

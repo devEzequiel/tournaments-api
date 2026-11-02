@@ -3,14 +3,20 @@
 namespace App\Modules\Championship;
 
 use App\Contracts\ChampionshipContract;
+use App\Domain\Tournament\RoundRobinScheduler;
+use App\Models\Award;
 use App\Models\Championship;
 use App\Models\Fixture;
+use App\Models\Goal;
+use App\Models\PlayerRate;
 use App\Services\BaseService;
 use Exception;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Serviço responsável pela lógica de negócio de Campeonatos.
- * 
+ *
  * Gerencia operações CRUD de campeonatos, incluindo:
  * - Criação de campeonatos com geração automática de fixtures
  * - Consulta e listagem de campeonatos
@@ -20,8 +26,6 @@ class ChampionshipService extends BaseService implements ChampionshipContract
 {
     /**
      * Relacionamentos a serem carregados por padrão.
-     * 
-     * @var array
      */
     protected array $with = ['teams', 'fixtures'];
 
@@ -31,31 +35,41 @@ class ChampionshipService extends BaseService implements ChampionshipContract
      */
     public function __construct()
     {
-        parent::__construct(new Championship());
+        parent::__construct(new Championship);
     }
 
     /**
      * Cria um novo campeonato e gera automaticamente as fixtures.
-     * 
+     *
      * Utiliza o RoundRobinScheduler para criar o calendário de jogos
      * baseado no número de rodadas configurado.
-     * 
-     * @param array $data Dados do campeonato (name, rounds, teams[], etc)
-     * @return bool Sucesso da operação
+     *
+     * @param  array  $data  Dados do campeonato (name, rounds, teams[], etc)
+     * @return Championship Campeonato criado, com as partidas geradas
+     *
      * @throws Exception Em caso de erro na criação
      */
-    public function create($data): bool
+    public function create($data): Championship
     {
-        $data['started_at'] = now();
-        $champ = $this->model::create($data);
-        self::createFixtures($data['teams'], $champ);
-        return true;
+        $teamIds = array_values(array_unique(array_map('intval', $data['teams'])));
+
+        return DB::transaction(function () use ($data, $teamIds): Championship {
+            unset($data['teams']);
+            $data['started_at'] = now();
+            $data['description'] = $data['description'] ?? '';
+            $data['playoff_type'] = $data['playoffs'] ? $data['playoff_type'] : null;
+
+            $championship = $this->model::query()->create($data);
+            self::createFixtures($teamIds, $championship);
+
+            return $championship;
+        });
     }
 
     /**
      * Busca um campeonato pelo ID.
-     * 
-     * @param int $championship_id ID do campeonato
+     *
+     * @param  int  $championship_id  ID do campeonato
      * @return Championship|null Campeonato encontrado ou null
      */
     public function find(int $championship_id)
@@ -70,12 +84,13 @@ class ChampionshipService extends BaseService implements ChampionshipContract
 
     /**
      * Busca um campeonato pelo nome (formato slug).
-     * 
+     *
      * Converte hífens para espaços para match com o banco.
      * Exemplo: "copa-do-mundo" -> "copa do mundo"
-     * 
-     * @param string $name Nome do campeonato em formato slug
+     *
+     * @param  string  $name  Nome do campeonato em formato slug
      * @return Championship Campeonato encontrado
+     *
      * @throws Exception Quando o campeonato não é encontrado
      */
     public function findByName(string $name)
@@ -85,7 +100,7 @@ class ChampionshipService extends BaseService implements ChampionshipContract
             ->where('name', $name)
             ->first();
 
-        if (!$championship) {
+        if (! $championship) {
             throw new Exception('Campeonato não encontrado');
         }
 
@@ -94,21 +109,23 @@ class ChampionshipService extends BaseService implements ChampionshipContract
 
     /**
      * Retorna todos os campeonatos com seus prêmios.
-     * 
+     *
      * Inclui o relacionamento com awards e o time campeão
      * para exibição na listagem.
-     * 
-     * @return \Illuminate\Database\Eloquent\Collection Lista de campeonatos
+     *
+     * @return Collection Lista de campeonatos
+     *
      * @throws Exception Quando nenhum campeonato é encontrado
      */
-    public
-    function all()
+    public function all()
     {
         $championship = $this->model::query()
             ->with(['awards.getFirstPlace']) // Inclui o relacionamento com awards e o time campeão
             ->get();
 
-        if (!$championship) throw new Exception('Nenhum campeonato encontrado');
+        if (! $championship) {
+            throw new Exception('Nenhum campeonato encontrado');
+        }
 
         return $championship;
     }
@@ -116,59 +133,61 @@ class ChampionshipService extends BaseService implements ChampionshipContract
     /**
      * @throws Exception
      */
-    public
-    function update($data, $championship_id): bool
+    public function update($data, $championship_id): bool
     {
-        $championship = $this->model::find((int)$championship_id);
+        $championship = $this->model::find((int) $championship_id);
 
-        if (!$championship) throw new Exception('Campeonato não encontrado');
+        if (! $championship) {
+            throw new Exception('Campeonato não encontrado');
+        }
 
-        return (bool)$championship->update($data);
+        return (bool) $championship->update($data);
     }
 
     /**
      * Remove um campeonato e todos os dados relacionados.
-     * 
+     *
      * Operação em cascade:
      * 1. Deleta gols das partidas
      * 2. Deleta avaliações de jogadores
      * 3. Deleta premiações
      * 4. Deleta partidas (fixtures)
      * 5. Deleta o campeonato
-     * 
-     * @param int $championship_id ID do campeonato
+     *
+     * @param  int  $championship_id  ID do campeonato
      * @return bool Sucesso da operação
+     *
      * @throws Exception Quando o campeonato não é encontrado
      */
-    public
-    function delete(int $championship_id): bool
+    public function delete(int $championship_id): bool
     {
         $championship = $this->model::find($championship_id);
 
-        if (!$championship) throw new Exception('Campeonato não encontrado');
+        if (! $championship) {
+            throw new Exception('Campeonato não encontrado');
+        }
 
         // Deletar todos os gols das partidas deste campeonato
         $fixtureIds = Fixture::where('championship_id', $championship_id)->pluck('id');
-        \App\Models\Goal::whereIn('fixture_id', $fixtureIds)->delete();
-        
+        Goal::whereIn('fixture_id', $fixtureIds)->delete();
+
         // Deletar todas as avaliações de jogadores das partidas deste campeonato
-        \App\Models\PlayerRate::whereIn('fixture_id', $fixtureIds)->delete();
-        
+        PlayerRate::whereIn('fixture_id', $fixtureIds)->delete();
+
         // Deletar todos os prêmios deste campeonato
-        \App\Models\Award::where('championship_id', $championship_id)->delete();
-        
+        Award::where('championship_id', $championship_id)->delete();
+
         // Deletar todas as partidas (fixtures)
         Fixture::where('championship_id', $championship_id)->delete();
 
         // Deletar o campeonato
-        return (bool)$championship->delete();
+        return (bool) $championship->delete();
     }
 
     /**
      * @throws Exception
      */
-    public
-    function getFixtures(int $championship_id)
+    public function getFixtures(int $championship_id)
     {
         $fixtures = Fixture::query()
             ->where('championship_id', $championship_id)
@@ -177,18 +196,19 @@ class ChampionshipService extends BaseService implements ChampionshipContract
             ->with('awayTeam', 'homeTeam')
             ->get()->toArray();
 
-        if (!$fixtures) throw new Exception('Nenhum confronto encontrado');
+        if (! $fixtures) {
+            throw new Exception('Nenhum confronto encontrado');
+        }
 
         return $fixtures;
     }
 
-    private
-    static function createFixtures(array $teams, Championship $champ)
+    private static function createFixtures(array $teams, Championship $championship): void
     {
-        $scheduler = new RoundRobinScheduler();
-        $scheduler->setTeams($teams)
-            ->shuffle()
-            ->setRounds($champ->rounds);
+        $scheduler = (new RoundRobinScheduler)
+            ->setTeams($teams)
+            ->setLegs($championship->rounds)
+            ->shuffle();
 
         $schedule = $scheduler->build();
 
@@ -197,14 +217,14 @@ class ChampionshipService extends BaseService implements ChampionshipContract
         foreach ($schedule as $roundNumber => $matches) {
             foreach ($matches as $match) {
                 $data = [
-                    'championship_id' => $champ->id,
+                    'championship_id' => $championship->id,
                     'round_number' => $roundNumber,
                     'game_number' => $gameNumber,
                     'home_team_id' => $match[0],
                     'away_team_id' => $match[1],
                 ];
-                
-                Fixture::create($data);
+
+                Fixture::query()->create($data);
                 $gameNumber++;
             }
         }

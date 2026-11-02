@@ -8,8 +8,6 @@ class CreateTeamRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
-     *
-     * @return bool
      */
     public function authorize(): bool
     {
@@ -26,7 +24,7 @@ class CreateTeamRequest extends FormRequest
         return [
             'name' => ['string', 'required', 'unique:teams,name'],
             'first_color' => ['string', 'required'],
-            'second_color' => ['string', 'nullable']
+            'second_color' => ['string', 'nullable'],
         ];
     }
 }

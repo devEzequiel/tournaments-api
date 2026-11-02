@@ -8,8 +8,6 @@ class CreateChampionshipRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
-     *
-     * @return bool
      */
     public function authorize(): bool
     {
@@ -24,12 +22,33 @@ class CreateChampionshipRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['string', 'required', 'unique:championships,name'],
+            'name' => ['string', 'required', 'max:255', 'unique:championships,name'],
             'description' => ['string', 'nullable'],
-            'rounds' => ['numeric', 'required'],
+            'rounds' => ['required', 'integer', 'min:1', 'max:20'],
             'playoffs' => ['boolean', 'required'],
-            'playoff_type' => ['string', 'nullable', 'in:final,semifinal'],
-            'teams' => ['array', 'required']
+            'playoff_type' => ['nullable', 'required_if:playoffs,true', 'in:final,semifinal'],
+            'teams' => ['array', 'required', 'min:2'],
+            'teams.*' => ['required', 'integer', 'distinct', 'exists:teams,id'],
+        ];
+    }
+
+    public function after(): array
+    {
+        return [
+            function ($validator): void {
+                if (! $this->boolean('playoffs')) {
+                    return;
+                }
+
+                $minimumTeams = $this->input('playoff_type') === 'semifinal' ? 4 : 2;
+
+                if (count($this->input('teams', [])) < $minimumTeams) {
+                    $validator->errors()->add(
+                        'teams',
+                        "Este formato de playoff exige pelo menos {$minimumTeams} times."
+                    );
+                }
+            },
         ];
     }
 }

@@ -12,10 +12,10 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 /**
  * Controller base do sistema.
- * 
+ *
  * Fornece métodos helper para respostas HTTP padronizadas,
  * facilitando a criação de APIs RESTful consistentes.
- * 
+ *
  * Todos os controllers devem estender esta classe.
  */
 class Controller extends BaseController
@@ -23,62 +23,42 @@ class Controller extends BaseController
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
     /**
-     * @param array $data
-     * @param string $message
-     * @return JsonResponse
+     * @param  array  $data
+     * @param  string  $message
      */
     public function responseOk($data, $message = 'success'): JsonResponse
     {
         return response()->json(['message' => $message, 'data' => $data], Response::HTTP_OK);
     }
 
-    /**
-     * @param string $message
-     * @return JsonResponse
-     */
     public function responseCreated(string $message = ''): JsonResponse
     {
         return response()->json($message ? ['message' => $message] : null, Response::HTTP_CREATED);
     }
 
     /**
-     * @param string $message
-     * @return JsonResponse
+     * @param  string  $message
      */
     public function responseAccepted($message = 'success'): JsonResponse
     {
         return response()->json(['message' => $message], ResponseAlias::HTTP_ACCEPTED);
     }
 
-    /**
-     * @return JsonResponse
-     */
     public function responseUnauthorized(): JsonResponse
     {
         return response()->json(null, Response::HTTP_UNAUTHORIZED);
     }
 
-    /**
-     * @return JsonResponse
-     */
     public function responseForbidden(): JsonResponse
     {
         return response()->json(null, Response::HTTP_FORBIDDEN);
     }
 
-    /**
-     * @param string $message
-     * @return JsonResponse
-     */
     public function responseNotFound(string $message = ''): JsonResponse
     {
         return response()->json($message ? ['message' => $message] : null, Response::HTTP_NOT_FOUND);
     }
 
-    /**
-     * @param string $message
-     * @return JsonResponse
-     */
     public function responseUnprocessableEntity(string $message = 'error'): JsonResponse
     {
         return response()->json(
@@ -87,10 +67,6 @@ class Controller extends BaseController
         );
     }
 
-    /**
-     * @param string $message
-     * @return JsonResponse
-     */
     public function responseInternalServerError(string $message = 'error'): JsonResponse
     {
         return response()->json(

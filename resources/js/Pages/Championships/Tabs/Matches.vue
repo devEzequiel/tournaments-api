@@ -35,7 +35,7 @@
                             :secondColor="match.home_team_second_color"
                         />
                         <span class="team-name">
-                            {{ match.home_team_name ? match.home_team_name.slice(0, 3).toUpperCase() : '' }}
+                            {{ match.home_team_name || 'A definir' }}
                         </span>
                     </div>
                     <span class="vs">VS</span>
@@ -46,7 +46,7 @@
                             :secondColor="match.away_team_second_color"
                         />
                         <span class="team-name">
-                            {{ match.away_team_name ? match.away_team_name.slice(0, 3).toUpperCase() : '' }}
+                            {{ match.away_team_name || 'A definir' }}
                         </span>
                     </div>
                 </div>

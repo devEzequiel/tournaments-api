@@ -185,19 +185,13 @@ export default {
             return icons[type] || '🏅';
         },
         async updateMatches() {
-            // Reutiliza o metodo fetchMatches para atualizar os dados
-            this.fetchMatches();
+            await Promise.all([this.fetchMatches(), this.fetchAwards()]);
         },
     },
     mounted() {
         // Carregar as partidas automaticamente ao abrir o componente
-        if (this.activeTab === "matches") {
-            this.fetchMatches();
-        }
-        // Carregar awards se houver playoffs
-        if (this.championship.playoffs) {
-            this.fetchAwards();
-        }
+        this.fetchMatches();
+        this.fetchAwards();
     },
 };
 </script>

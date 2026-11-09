@@ -2,19 +2,18 @@
     <div class="matches-container">
         <h2 class="title">Resultados</h2>
         <div v-for="round in groupedMatches" :key="round.round" class="round-block">
-            <h3 class="round-title">Rodada {{ round.round }}</h3>
+            <h3 class="round-title">{{ round.label }}</h3>
 
             <div
                 v-for="match in round.matches"
                 :key="match.id"
                 :class="['match-block', { 'match-played': match.played_at, 'match-unplayed': !match.played_at }]"
-                @click="match.played_at && goToMatch(match.id)"
             >
                 <div class="match-row">
                     <!-- Time da casa -->
                     <div class="team home">
                         <TeamLogo
-                            :firstColor="match.home_team_first_color"
+                            :firstColor="match.home_team_color"
                             :secondColor="match.home_team_second_color"
                         />
                         <span class="team-name">{{ match.home_team_name }}</span>
@@ -30,7 +29,7 @@
                     <div class="team away">
                         <span class="team-name text-end">{{ match.away_team_name }}</span>
                         <TeamLogo
-                            :firstColor="match.away_team_first_color"
+                            :firstColor="match.away_team_color"
                             :secondColor="match.away_team_second_color"
                         />
                     </div>
@@ -63,17 +62,21 @@ export default {
         groupedMatches() {
             // Agrupa partidas por rodada
             const rounds = {};
-            this.matches.forEach((match) => {
-                if (!rounds[match.round_number]) {
-                    rounds[match.round_number] = [];
+            this.matches.filter((match) => match.is_played).forEach((match) => {
+                const key = match.is_playoff ? `playoff-${match.playoff_stage}` : `round-${match.round_number}`;
+                if (!rounds[key]) {
+                    rounds[key] = {
+                        round: match.round_number,
+                        label: match.is_playoff
+                            ? (match.playoff_stage === 'semifinal' ? 'Semifinais' : 'Final')
+                            : `Rodada ${match.round_number}`,
+                        matches: [],
+                    };
                 }
-                rounds[match.round_number].push(match);
+                rounds[key].matches.push(match);
             });
 
-            return Object.entries(rounds).map(([round, matches]) => ({
-                round: parseInt(round, 10),
-                matches,
-            }));
+            return Object.values(rounds).sort((a, b) => a.round - b.round);
         },
     },
     methods: {
@@ -81,14 +84,11 @@ export default {
             try {
                 const response = await axios.get(`/api/fixtures/${this.championshipId}/basic`);
                 if (response.data && response.data.data) {
-                    this.matches = response.data.data;
+                    this.matches = response.data.data.fixtures || [];
                 }
             } catch (error) {
                 console.error("Erro ao carregar os resultados das partidas:", error);
             }
-        },
-        goToMatch(id) {
-            this.$router.push(`/fixtures/${id}`); // Navega para a página do fixture
         },
     },
     mounted() {
@@ -105,7 +105,8 @@ export default {
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     max-width: 700px;
-    margin: 0 auto; /* Centraliza o container */    animation: fadeIn 0.3s ease-in;
+    margin: 0 auto;
+    animation: fadeIn 0.3s ease-in;
 }
 
 @keyframes fadeIn {
@@ -116,7 +117,8 @@ export default {
     to {
         opacity: 1;
         transform: translateY(0);
-    }}
+    }
+}
 
 /* Título */
 .title {
@@ -174,6 +176,7 @@ export default {
     display: flex;
     align-items: center;
     flex-basis: 45%;
+    min-width: 0;
 }
 
 /* Time da casa */
@@ -192,6 +195,8 @@ export default {
     font-weight: bold;
     margin: 0 8px; /* Espaço entre nome e logo */
     white-space: nowrap; /* Previne quebra */
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Resultado */
